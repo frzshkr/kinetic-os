@@ -1,0 +1,635 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ActiveTab,
+  FastingState,
+  UserSettings,
+  BriskwalkSession,
+  GeoPoint,
+  DailyHealthLog,
+  AuthUser,
+} from './types';
+import { storage, DEFAULT_SETTINGS, DEFAULT_FASTING_STATE } from './utils/storage';
+import { dbService } from './services/dbService';
+import { authService } from './services/authService';
+import { sound } from './utils/audio';
+import { voice } from './utils/speech';
+import {
+  calculateHaversineDistance,
+  calculateWalkCalories,
+  estimateSteps,
+} from './utils/geo';
+
+// Components
+import { Header } from './components/common/Header';
+import { NavigationBar } from './components/common/NavigationBar';
+import { AuthModal } from './components/auth/AuthModal';
+import { FastingRing } from './components/fasting/FastingRing';
+import { FastingStages } from './components/fasting/FastingStages';
+import { FastingControls } from './components/fasting/FastingControls';
+import { WaterTracker } from './components/fasting/WaterTracker';
+import { FastingHistory } from './components/fasting/FastingHistory';
+
+import { BriskwalkHUD } from './components/briskwalk/BriskwalkHUD';
+import { LiveTrackerMap } from './components/briskwalk/LiveTrackerMap';
+import { WorkoutControls } from './components/briskwalk/WorkoutControls';
+import { WorkoutHistory } from './components/briskwalk/WorkoutHistory';
+
+import { ReadinessView } from './components/health/ReadinessView';
+import { SummaryView } from './components/analytics/SummaryView';
+import { AICoachChat } from './components/assistant/AICoachChat';
+import { SettingsModal } from './components/settings/SettingsModal';
+
+const DEFAULT_HEALTH_LOG: DailyHealthLog = {
+  date: new Date().toISOString().slice(0, 10),
+  sleepHours: 7.8,
+  sleepQuality: 88,
+  readinessScore: 89,
+  weightKg: 72.0,
+  waterMl: 1250,
+  proteinGrams: 85,
+  proteinTargetGrams: 150,
+  carbsGrams: 95,
+  fatGrams: 45,
+  habits: {
+    morningSun: true,
+    electrolytes: true,
+    stepsTarget: false,
+    preBedBuffer: true,
+  },
+};
+
+export const App: React.FC = () => {
+  // Navigation & User Auth State
+  const [activeTab, setActiveTab] = useState<ActiveTab>('fasting');
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => authService.getCurrentUser());
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(() => !authService.isAuthenticated());
+
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+
+  // Fasting State
+  const [fastingState, setFastingState] = useState<FastingState>(DEFAULT_FASTING_STATE);
+
+  // Briskwalk State
+  const [currentLocation, setCurrentLocation] = useState<GeoPoint | null>(null);
+  const [isWalkTracking, setIsWalkTracking] = useState<boolean>(false);
+  const [isWalkPaused, setIsWalkPaused] = useState<boolean>(false);
+  const [activeWalkSession, setActiveWalkSession] = useState<BriskwalkSession | null>(null);
+  const [walkHistory, setWalkHistory] = useState<BriskwalkSession[]>([]);
+
+  // Daily Health & Readiness State
+  const [healthLog, setHealthLog] = useState<DailyHealthLog>(DEFAULT_HEALTH_LOG);
+
+  // Watch Position Ref
+  const geoWatchIdRef = useRef<number | null>(null);
+  const lastLocationRef = useRef<GeoPoint | null>(null);
+
+  // Helper to load user telemetry from SQLite
+  const loadUserTelemetry = (user: AuthUser | null) => {
+    dbService.fetchAllData().then((dbData) => {
+      if (dbData) {
+        if (dbData.settings) {
+          setSettings((prev) => ({
+            ...prev,
+            ...dbData.settings,
+            userName: user?.displayName || user?.username || dbData.settings?.userName || prev.userName,
+          }));
+        } else if (user) {
+          setSettings((prev) => ({
+            ...prev,
+            userName: user.displayName || user.username,
+          }));
+        }
+        setFastingState((prev) => ({ ...prev, history: dbData.fasts || [] }));
+        setWalkHistory(dbData.walks || []);
+        if (dbData.healthLogs && dbData.healthLogs.length > 0) {
+          setHealthLog(dbData.healthLogs[0]);
+        }
+      }
+    });
+  };
+
+  const handleAuthSuccess = (user: AuthUser) => {
+    setCurrentUser(user);
+    setIsAuthModalOpen(false);
+    loadUserTelemetry(user);
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    setCurrentUser(null);
+    setFastingState(DEFAULT_FASTING_STATE);
+    setWalkHistory([]);
+    setHealthLog(DEFAULT_HEALTH_LOG);
+    setIsAuthModalOpen(true);
+  };
+
+  // 1. Initial Load from SQLite Database & LocalStorage fallback
+  useEffect(() => {
+    // Local storage fallback first
+    const loadedSettings = storage.getSettings();
+    if (currentUser) {
+      loadedSettings.userName = currentUser.displayName || currentUser.username;
+    }
+    setSettings(loadedSettings);
+    sound.setMuted(!loadedSettings.soundEnabled);
+    voice.setEnabled(loadedSettings.voiceGuidanceEnabled);
+    voice.setLanguage(loadedSettings.voiceLanguage || 'en-US');
+
+    const loadedFasting = storage.getFastingState();
+    setFastingState(loadedFasting);
+
+    const loadedWalkHistory = storage.getWalkHistory();
+    setWalkHistory(loadedWalkHistory);
+
+    // Fetch live from SQLite Database for this user
+    loadUserTelemetry(currentUser);
+
+    // Verify token validity with backend if logged in
+    if (currentUser) {
+      authService.fetchCurrentUser().then((freshUser) => {
+        if (freshUser) {
+          setCurrentUser(freshUser);
+        }
+      });
+    }
+  }, []);
+
+  // 2. Global GPS Watcher
+  useEffect(() => {
+    if (!('geolocation' in navigator)) return;
+
+    geoWatchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const point: GeoPoint = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+          altitude: pos.coords.altitude,
+          speed: pos.coords.speed,
+          timestamp: pos.timestamp,
+        };
+
+        setCurrentLocation(point);
+        lastLocationRef.current = point;
+      },
+      (err) => {
+        console.warn('GPS location tracking error:', err.message);
+        if (!currentLocation) {
+          setCurrentLocation({
+            latitude: 3.1578,
+            longitude: 101.7119,
+            accuracy: 10,
+            timestamp: Date.now(),
+          });
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 10000,
+      }
+    );
+
+    return () => {
+      if (geoWatchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(geoWatchIdRef.current);
+      }
+    };
+  }, []);
+
+  // 3. Briskwalk GPS Tracking & Telemetry Accumulator
+  useEffect(() => {
+    if (!isWalkTracking || isWalkPaused || !currentLocation) return;
+
+    setActiveWalkSession((prev) => {
+      if (!prev) return null;
+
+      const path = [...prev.path];
+      const lastPoint = path[path.length - 1];
+
+      let addedDistance = 0;
+      let newPace = prev.currentPaceSecondsPerKm;
+      let newSpeed = prev.currentSpeedKmh;
+
+      if (lastPoint) {
+        const delta = calculateHaversineDistance(
+          lastPoint.latitude,
+          lastPoint.longitude,
+          currentLocation.latitude,
+          currentLocation.longitude
+        );
+
+        if (delta >= 3 && currentLocation.accuracy <= 35) {
+          addedDistance = delta;
+          path.push(currentLocation);
+
+          const timeDeltaSecs = Math.max(1, (currentLocation.timestamp - lastPoint.timestamp) / 1000);
+          newSpeed = (delta / timeDeltaSecs) * 3.6;
+
+          if (delta > 0 && timeDeltaSecs > 0) {
+            newPace = (timeDeltaSecs / delta) * 1000;
+          }
+        }
+      } else {
+        path.push(currentLocation);
+      }
+
+      const totalDistance = prev.distanceMeters + addedDistance;
+      const totalDuration = prev.durationSeconds + 1;
+      const avgPace = totalDistance > 20 ? (totalDuration / totalDistance) * 1000 : 0;
+      const calories = calculateWalkCalories(settings.weightKg, totalDuration, totalDistance);
+      const steps = estimateSteps(totalDistance);
+
+      const splits = [...prev.splits];
+      const currentKmMark = Math.floor(totalDistance / 1000);
+      if (currentKmMark > splits.length && currentKmMark > 0) {
+        sound.playMilestone();
+        voice.speak(`Kilometer ${currentKmMark} complete!`);
+        splits.push({
+          kilometer: currentKmMark,
+          durationSeconds: totalDuration,
+          paceSecondsPerKm: avgPace,
+        });
+      }
+
+      return {
+        ...prev,
+        durationSeconds: totalDuration,
+        distanceMeters: totalDistance,
+        currentPaceSecondsPerKm: newPace,
+        avgPaceSecondsPerKm: avgPace,
+        currentSpeedKmh: newSpeed,
+        caloriesBurned: calories,
+        estimatedSteps: steps,
+        path,
+        splits,
+      };
+    });
+  }, [currentLocation]);
+
+  // Briskwalk second ticker
+  useEffect(() => {
+    let timer: any = null;
+    if (isWalkTracking && !isWalkPaused) {
+      timer = setInterval(() => {
+        setActiveWalkSession((prev) => {
+          if (!prev) return null;
+          const totalDuration = prev.durationSeconds + 1;
+          const calories = calculateWalkCalories(
+            settings.weightKg,
+            totalDuration,
+            prev.distanceMeters
+          );
+          return {
+            ...prev,
+            durationSeconds: totalDuration,
+            caloriesBurned: calories,
+          };
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isWalkTracking, isWalkPaused, settings.weightKg]);
+
+  // Fasting Handlers
+  const handleStartFast = () => {
+    const targetHours =
+      fastingState.selectedProtocol === 'custom'
+        ? fastingState.customHours
+        : parseInt(fastingState.selectedProtocol.split('-')[0]) || 16;
+
+    const newFast = {
+      id: `fast_${Date.now()}`,
+      startTime: Date.now(),
+      targetDurationHours: targetHours,
+      protocolId: fastingState.selectedProtocol,
+      completed: false,
+      waterIntakeMl: 0,
+    };
+
+    const updated: FastingState = {
+      ...fastingState,
+      isActive: true,
+      currentFast: newFast,
+    };
+
+    setFastingState(updated);
+    storage.saveFastingState(updated);
+    dbService.syncFast(newFast);
+  };
+
+  const handleEndFast = (mood: 'great' | 'good' | 'neutral' | 'struggling') => {
+    if (!fastingState.currentFast) return;
+
+    const elapsedHours = (Date.now() - fastingState.currentFast.startTime) / (1000 * 3600);
+    const completed = elapsedHours >= fastingState.currentFast.targetDurationHours;
+
+    const finishedRecord = {
+      ...fastingState.currentFast,
+      endTime: Date.now(),
+      completed,
+      mood,
+    };
+
+    const history = [finishedRecord, ...fastingState.history];
+    const updated: FastingState = {
+      ...fastingState,
+      isActive: false,
+      currentFast: null,
+      history,
+    };
+
+    setFastingState(updated);
+    storage.saveFastingState(updated);
+    dbService.syncFast(finishedRecord);
+  };
+
+  const handleAdjustStartTime = (newStartTime: number) => {
+    if (!fastingState.currentFast) return;
+    const updated: FastingState = {
+      ...fastingState,
+      currentFast: {
+        ...fastingState.currentFast,
+        startTime: newStartTime,
+      },
+    };
+    setFastingState(updated);
+    storage.saveFastingState(updated);
+  };
+
+  const handleWaterUpdate = (amount: number) => {
+    const newAmount = Math.max(0, fastingState.waterIntakeTodayMl + amount);
+    const updated: FastingState = {
+      ...fastingState,
+      waterIntakeTodayMl: newAmount,
+    };
+    setFastingState(updated);
+    storage.saveFastingState(updated);
+  };
+
+  const handleWaterReset = () => {
+    const updated: FastingState = {
+      ...fastingState,
+      waterIntakeTodayMl: 0,
+    };
+    setFastingState(updated);
+    storage.saveFastingState(updated);
+  };
+
+  // Briskwalk Handlers
+  const handleStartWalk = () => {
+    const newSession: BriskwalkSession = {
+      id: `walk_${Date.now()}`,
+      startTime: Date.now(),
+      durationSeconds: 0,
+      distanceMeters: 0,
+      avgPaceSecondsPerKm: 0,
+      currentPaceSecondsPerKm: 0,
+      currentSpeedKmh: 0,
+      maxSpeedKmh: 0,
+      caloriesBurned: 0,
+      estimatedSteps: 0,
+      path: currentLocation ? [currentLocation] : [],
+      splits: [],
+      isPaused: false,
+    };
+
+    setActiveWalkSession(newSession);
+    setIsWalkTracking(true);
+    setIsWalkPaused(false);
+  };
+
+  const handlePauseWalk = () => {
+    setIsWalkPaused(true);
+  };
+
+  const handleResumeWalk = () => {
+    setIsWalkPaused(false);
+  };
+
+  const handleStopWalk = () => {
+    if (activeWalkSession && activeWalkSession.distanceMeters > 30) {
+      const finished = { ...activeWalkSession, endTime: Date.now() };
+      storage.addWalkSession(finished);
+      setWalkHistory(storage.getWalkHistory());
+      dbService.syncWalk(finished);
+    }
+    setIsWalkTracking(false);
+    setIsWalkPaused(false);
+  };
+
+  // Health & Readiness Handler
+  const handleUpdateHealthLog = (updated: DailyHealthLog) => {
+    setHealthLog(updated);
+    dbService.syncHealthLog(updated);
+  };
+
+  const handleSaveSettings = (updated: UserSettings) => {
+    setSettings(updated);
+    storage.saveSettings(updated);
+    dbService.syncSettings(updated);
+    sound.setMuted(!updated.soundEnabled);
+    voice.setEnabled(updated.voiceGuidanceEnabled);
+    voice.setLanguage(updated.voiceLanguage);
+  };
+
+  const handleToggleSound = () => {
+    const updated = { ...settings, soundEnabled: !settings.soundEnabled };
+    handleSaveSettings(updated);
+  };
+
+  const fastingElapsedHours =
+    fastingState.isActive && fastingState.currentFast
+      ? (Date.now() - fastingState.currentFast.startTime) / (1000 * 3600)
+      : 0;
+
+  const currentFastingTargetHours =
+    fastingState.selectedProtocol === 'custom'
+      ? fastingState.customHours
+      : parseInt(fastingState.selectedProtocol.split('-')[0]) || 16;
+
+  return (
+    <div className="min-h-screen bg-[#F5F2EB] text-slate-900 flex flex-col font-['Outfit'] pb-28 selection:bg-[#E8F84A] selection:text-black">
+      {/* Dynamic Island Header */}
+      <Header
+        fastingState={fastingState}
+        userSettings={settings}
+        activeTab={activeTab}
+        isWalkActive={isWalkTracking && !isWalkPaused}
+        currentUser={currentUser}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onToggleSound={handleToggleSound}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
+      />
+
+      {/* Main Viewport with Page Transitions */}
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 pt-5 pb-6">
+        <AnimatePresence mode="wait">
+          
+          {/* TAB 1: FASTING */}
+          {activeTab === 'fasting' && (
+            <motion.div
+              key="fasting-view"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+              className="space-y-4"
+            >
+              <FastingRing
+                currentFast={fastingState.currentFast}
+                targetHours={currentFastingTargetHours}
+              />
+
+              <FastingControls
+                isActive={fastingState.isActive}
+                selectedProtocol={fastingState.selectedProtocol}
+                targetHours={currentFastingTargetHours}
+                onSelectProtocol={(protoId) => {
+                  const updated: FastingState = { ...fastingState, selectedProtocol: protoId };
+                  setFastingState(updated);
+                  storage.saveFastingState(updated);
+                }}
+                onStartFast={handleStartFast}
+                onEndFast={handleEndFast}
+                onAdjustStartTime={handleAdjustStartTime}
+                currentStartTime={fastingState.currentFast?.startTime}
+              />
+
+              <WaterTracker
+                currentMl={fastingState.waterIntakeTodayMl}
+                goalMl={fastingState.waterGoalMl}
+                onUpdate={handleWaterUpdate}
+                onReset={handleWaterReset}
+              />
+
+              <FastingStages elapsedHours={fastingElapsedHours} />
+
+              <FastingHistory history={fastingState.history} />
+            </motion.div>
+          )}
+
+          {/* TAB 2: BRISK WALK */}
+          {activeTab === 'briskwalk' && (
+            <motion.div
+              key="briskwalk-view"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+              className="space-y-4"
+            >
+              <BriskwalkHUD
+                session={activeWalkSession}
+                userSettings={settings}
+              />
+
+              <LiveTrackerMap
+                currentLocation={currentLocation}
+                path={activeWalkSession?.path || []}
+                isTracking={isWalkTracking && !isWalkPaused}
+                onCenterMap={() => {}}
+              />
+
+              <WorkoutControls
+                isTracking={isWalkTracking}
+                isPaused={isWalkPaused}
+                activeSession={activeWalkSession}
+                onStart={handleStartWalk}
+                onPause={handlePauseWalk}
+                onResume={handleResumeWalk}
+                onStop={handleStopWalk}
+              />
+
+              <WorkoutHistory history={walkHistory} />
+            </motion.div>
+          )}
+
+          {/* TAB 3: BIO-RECOVERY & NUTRITION (Replaces Waze) */}
+          {activeTab === 'health' && (
+            <motion.div
+              key="health-view"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+            >
+              <ReadinessView
+                healthLog={healthLog}
+                userSettings={settings}
+                fastingState={fastingState}
+                recentWalks={walkHistory}
+                onUpdateHealthLog={handleUpdateHealthLog}
+              />
+            </motion.div>
+          )}
+
+          {/* TAB 4: STATS / SUMMARY (DAY, MONTH, YEAR) */}
+          {activeTab === 'analytics' && (
+            <motion.div
+              key="analytics-view"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+            >
+              <SummaryView
+                walkHistory={walkHistory}
+                fastHistory={fastingState.history}
+                waterTodayMl={fastingState.waterIntakeTodayMl}
+                userSettings={settings}
+              />
+            </motion.div>
+          )}
+
+          {/* TAB 5: COACH */}
+          {activeTab === 'assistant' && (
+            <motion.div
+              key="assistant-view"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+            >
+              <AICoachChat
+                userSettings={settings}
+                fastingState={fastingState}
+                recentWalks={walkHistory}
+                activeWalk={isWalkTracking ? activeWalkSession : null}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      {/* Floating Bottom Navigation Bar Dock */}
+      <NavigationBar
+        activeTab={activeTab}
+        onTabChange={(tab) => setActiveTab(tab)}
+        isFastingActive={fastingState.isActive}
+        isWalkActive={isWalkTracking && !isWalkPaused}
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        settings={settings}
+        onClose={() => setIsSettingsOpen(false)}
+        onSave={handleSaveSettings}
+      />
+
+      {/* User Login & Registration Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={handleAuthSuccess}
+        isMandatory={!currentUser}
+      />
+    </div>
+  );
+};
+
+export default App;

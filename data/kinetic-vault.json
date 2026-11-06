@@ -1,0 +1,39 @@
+{
+  "users": [
+    {
+      "id": "usr_1793981070012_rcjvcz",
+      "username": "farris_render_test",
+      "passwordHash": "$2b$10$xGN9eSeK/vM78NSfWazOFeJzmgBqCDdbJMOKJmgiE8XQlX/SYxWN2",
+      "displayName": "farris_render_test",
+      "weightKg": 70,
+      "heightCm": 172,
+      "targetPaceMinPerKm": 510,
+      "settings": {
+        "targetFastHours": 16,
+        "defaultProtocolId": "16_8",
+        "dailyWaterGoalMl": 2500,
+        "dailyWalkGoalMeters": 5000,
+        "soundEnabled": true,
+        "voiceGuidanceEnabled": true,
+        "voiceLanguage": "en-US"
+      },
+      "createdAt": "2026-11-06T16:04:30.012Z"
+    }
+  ],
+  "fasts": [
+    {
+      "id": "fast_render_1",
+      "userId": "usr_1793981070012_rcjvcz",
+      "startTime": 1793977470159,
+      "endTime": 1793981070159,
+      "targetDurationHours": 16,
+      "protocolId": "16_8",
+      "completed": true,
+      "mood": null,
+      "notes": null,
+      "createdAt": "2026-11-06T16:04:30.166Z"
+    }
+  ],
+  "walks": [],
+  "healthLogs": []
+}

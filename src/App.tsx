@@ -23,7 +23,7 @@ import {
 // Components
 import { Header } from './components/common/Header';
 import { NavigationBar } from './components/common/NavigationBar';
-import { AuthModal } from './components/auth/AuthModal';
+import { AuthView } from './components/auth/AuthView';
 import { FastingRing } from './components/fasting/FastingRing';
 import { FastingStages } from './components/fasting/FastingStages';
 import { FastingControls } from './components/fasting/FastingControls';
@@ -112,8 +112,17 @@ export const App: React.FC = () => {
 
   const handleAuthSuccess = (user: AuthUser) => {
     setCurrentUser(user);
-    setIsAuthModalOpen(false);
     loadUserTelemetry(user);
+  };
+
+  const handleGuestExplore = () => {
+    const guestUser: AuthUser = {
+      id: 'guest_user',
+      username: 'guest',
+      displayName: 'Guest Athlete',
+    };
+    setCurrentUser(guestUser);
+    sound.playClick();
   };
 
   const handleLogout = () => {
@@ -122,7 +131,6 @@ export const App: React.FC = () => {
     setFastingState(DEFAULT_FASTING_STATE);
     setWalkHistory([]);
     setHealthLog(DEFAULT_HEALTH_LOG);
-    setIsAuthModalOpen(true);
   };
 
   // 1. Initial Load from SQLite Database & LocalStorage fallback
@@ -450,6 +458,16 @@ export const App: React.FC = () => {
       ? fastingState.customHours
       : parseInt(fastingState.selectedProtocol.split('-')[0]) || 16;
 
+  // If user is not authenticated, render luxury full-page editorial auth experience
+  if (!currentUser) {
+    return (
+      <AuthView
+        onSuccess={handleAuthSuccess}
+        onGuestExplore={handleGuestExplore}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F5F2EB] text-slate-900 flex flex-col font-['Outfit'] pb-28 selection:bg-[#E8F84A] selection:text-black">
       {/* Dynamic Island Header */}
@@ -461,7 +479,7 @@ export const App: React.FC = () => {
         currentUser={currentUser}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onToggleSound={handleToggleSound}
-        onOpenAuth={() => setIsAuthModalOpen(true)}
+        onOpenAuth={handleLogout}
         onLogout={handleLogout}
       />
 
@@ -619,14 +637,6 @@ export const App: React.FC = () => {
         settings={settings}
         onClose={() => setIsSettingsOpen(false)}
         onSave={handleSaveSettings}
-      />
-
-      {/* User Login & Registration Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={handleAuthSuccess}
-        isMandatory={!currentUser}
       />
     </div>
   );

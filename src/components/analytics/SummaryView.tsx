@@ -124,10 +124,16 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
             </span>
           </div>
           <div className="mt-2 flex items-center gap-1.5 text-[11px] font-mono font-bold text-slate-500">
-            <span className="text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded-full">
-              +{timeframe === 'day' ? '4.2' : timeframe === 'month' ? '18' : '45'}%
-            </span>
-            <span>vs previous {timeframe}</span>
+            {summary.totalDistanceMeters > 0 ? (
+              <>
+                <span className="text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded-full">
+                  LIVE
+                </span>
+                <span>Active tracking logged</span>
+              </>
+            ) : (
+              <span className="text-slate-400">Ready for your first walk session</span>
+            )}
           </div>
         </motion.div>
 
@@ -153,8 +159,14 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
             </span>
           </div>
           <div className="mt-2 flex items-center gap-1.5 text-[11px] font-mono font-bold text-slate-500">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Avg {summary.avgFastHours}h / session</span>
+            {summary.totalFastHours > 0 ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Avg {summary.avgFastHours}h / session</span>
+              </>
+            ) : (
+              <span className="text-slate-400">Start fasting timer to log autophagy</span>
+            )}
           </div>
         </motion.div>
       </div>
@@ -209,7 +221,9 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
                 : chartMetric === 'fasting'
                 ? pt.fastHours
                 : pt.calories;
-            const barHeightPercent = Math.max(8, Math.min(100, Math.round((rawVal / maxChartVal) * 100)));
+            const barHeightPercent = rawVal > 0
+              ? Math.max(8, Math.min(100, Math.round((rawVal / maxChartVal) * 100)))
+              : 2;
 
             const isCurrentBar = idx === summary.chartData.length - 1 || idx === new Date().getMonth();
 

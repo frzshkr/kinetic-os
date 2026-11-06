@@ -5,7 +5,7 @@ export function calculateSummary(
   walkHistory: BriskwalkSession[],
   fastHistory: FastingRecord[],
   waterTodayMl: number,
-  userWeightKg: number
+  _userWeightKg: number
 ): MetricSummary {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -22,11 +22,11 @@ export function calculateSummary(
     periodLabel = `${now.getFullYear()} ANNUAL`;
   }
 
-  // Filter records within the selected timeframe
-  const filteredWalks = walkHistory.filter((w) => w.startTime >= cutoffTime);
-  const filteredFasts = fastHistory.filter((f) => f.startTime >= cutoffTime);
+  // 1. Filter ONLY real records within the selected timeframe
+  const filteredWalks = (walkHistory || []).filter((w) => w.startTime >= cutoffTime);
+  const filteredFasts = (fastHistory || []).filter((f) => f.startTime >= cutoffTime);
 
-  // Aggregate walk metrics
+  // 2. Aggregate REAL walk metrics (strictly zero if empty)
   const totalDistanceMeters = filteredWalks.reduce((acc, w) => acc + (w.distanceMeters || 0), 0);
   const totalWalkDurationSeconds = filteredWalks.reduce((acc, w) => acc + (w.durationSeconds || 0), 0);
   const totalCalories = filteredWalks.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0);
@@ -35,27 +35,23 @@ export function calculateSummary(
   const avgPaceSecondsPerKm =
     totalDistanceMeters > 50 && totalWalkDurationSeconds > 0
       ? (totalWalkDurationSeconds / totalDistanceMeters) * 1000
-      : 450; // default 7:30 /km
+      : 0;
 
-  // Aggregate fasting metrics
+  // 3. Aggregate REAL fasting metrics (strictly zero if empty)
   let totalFastHours = 0;
   filteredFasts.forEach((f) => {
     const end = f.endTime || Date.now();
-    totalFastHours += Math.max(0, (end - f.startTime) / (1000 * 3600));
+    const duration = Math.max(0, (end - f.startTime) / (1000 * 3600));
+    totalFastHours += duration;
   });
 
   const completedFastsCount = filteredFasts.filter((f) => f.completed).length;
-  const avgFastHours = filteredFasts.length > 0 ? totalFastHours / filteredFasts.length : 16;
+  const avgFastHours = filteredFasts.length > 0 ? totalFastHours / filteredFasts.length : 0;
 
-  // Hydration estimation
-  let totalWaterMl = waterTodayMl;
-  if (timeframe === 'month') {
-    totalWaterMl = Math.max(waterTodayMl * 22, filteredFasts.length * 2200);
-  } else if (timeframe === 'year') {
-    totalWaterMl = Math.max(waterTodayMl * 260, (filteredFasts.length || 1) * 2200 * 12);
-  }
+  // 4. Hydration aggregation (real recorded water)
+  const totalWaterMl = waterTodayMl || 0;
 
-  // Consistency rate
+  // 5. Real consistency rate
   let expectedDays = 1;
   if (timeframe === 'month') expectedDays = Math.max(1, now.getDate());
   if (timeframe === 'year') expectedDays = Math.max(1, Math.floor((now.getTime() - startOfYear) / (1000 * 3600 * 24)));
@@ -65,9 +61,9 @@ export function calculateSummary(
     ...filteredFasts.map((f) => new Date(f.startTime).toDateString()),
   ]).size;
 
-  const consistencyRatePercent = Math.min(100, Math.max(15, Math.round((activeDays / expectedDays) * 100)));
+  const consistencyRatePercent = Math.min(100, Math.round((activeDays / expectedDays) * 100));
 
-  // Build Animated Chart Points
+  // 6. Build 100% Real Chart Points
   const chartData: SummaryChartPoint[] = [];
 
   if (timeframe === 'day') {
@@ -86,51 +82,76 @@ export function calculateSummary(
         const h = new Date(w.startTime).getHours();
         return h >= int.startH && h < int.endH;
       });
-      const distKm = walksInSlot.reduce((acc, w) => acc + w.distanceMeters / 1000, 0);
-      const cals = walksInSlot.reduce((acc, w) => acc + w.caloriesBurned, 0);
+      const distKm = walksInSlot.reduce((acc, w) => acc + (w.distanceMeters || 0) / 1000, 0);
+      const cals = walksInSlot.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0);
+
+      // Fasting hours in this slot
+      const fastsInSlot = filteredFasts.filter((f) => {
+        const h = new Date(f.startTime).getHours();
+        return h >= int.startH && h < int.endH;
+      });
+      let slotFastHours = 0;
+      fastsInSlot.forEach((f) => {
+        const end = f.endTime || Date.now();
+        slotFastHours += Math.max(0, (end - f.startTime) / (1000 * 3600));
+      });
 
       chartData.push({
         label: int.label,
         distanceKm: parseFloat(distKm.toFixed(2)),
-        fastHours: parseFloat((totalFastHours / 6).toFixed(1)),
+        fastHours: parseFloat(slotFastHours.toFixed(1)),
         calories: cals,
       });
     });
   } else if (timeframe === 'month') {
-    // 4 weeks breakdown
+    // 4 weeks breakdown of real records
     for (let w = 1; w <= 4; w++) {
       const weekWalks = filteredWalks.filter((walk) => {
         const d = new Date(walk.startTime).getDate();
         return d > (w - 1) * 7 && d <= w * 7;
       });
-      const dist = weekWalks.reduce((acc, x) => acc + x.distanceMeters / 1000, 0);
-      const cals = weekWalks.reduce((acc, x) => acc + x.caloriesBurned, 0);
+      const weekFasts = filteredFasts.filter((fast) => {
+        const d = new Date(fast.startTime).getDate();
+        return d > (w - 1) * 7 && d <= w * 7;
+      });
+
+      const dist = weekWalks.reduce((acc, x) => acc + (x.distanceMeters || 0) / 1000, 0);
+      const cals = weekWalks.reduce((acc, x) => acc + (x.caloriesBurned || 0), 0);
+      let weekFastHours = 0;
+      weekFasts.forEach((f) => {
+        const end = f.endTime || Date.now();
+        weekFastHours += Math.max(0, (end - f.startTime) / (1000 * 3600));
+      });
 
       chartData.push({
         label: `W${w}`,
         sublabel: `Week ${w}`,
-        distanceKm: parseFloat(Math.max(dist, (totalDistanceMeters / 4000) * (0.8 + w * 0.1)).toFixed(1)),
-        fastHours: parseFloat(Math.max(totalFastHours / 4, 16).toFixed(1)),
-        calories: Math.max(cals, Math.round(totalCalories / 4)),
+        distanceKm: parseFloat(dist.toFixed(2)),
+        fastHours: parseFloat(weekFastHours.toFixed(1)),
+        calories: cals,
       });
     }
   } else {
-    // 12 Months
+    // 12 Months breakdown of real records
     const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    const currentMonthIdx = now.getMonth();
 
     months.forEach((m, idx) => {
-      const isPastOrCurrent = idx <= currentMonthIdx;
       const monthWalks = filteredWalks.filter((w) => new Date(w.startTime).getMonth() === idx);
-      const dist = monthWalks.reduce((acc, x) => acc + x.distanceMeters / 1000, 0);
+      const monthFasts = filteredFasts.filter((f) => new Date(f.startTime).getMonth() === idx);
+
+      const dist = monthWalks.reduce((acc, x) => acc + (x.distanceMeters || 0) / 1000, 0);
+      const cals = monthWalks.reduce((acc, x) => acc + (x.caloriesBurned || 0), 0);
+      let monthFastHours = 0;
+      monthFasts.forEach((f) => {
+        const end = f.endTime || Date.now();
+        monthFastHours += Math.max(0, (end - f.startTime) / (1000 * 3600));
+      });
 
       chartData.push({
         label: m,
-        distanceKm: isPastOrCurrent
-          ? parseFloat(Math.max(dist, (totalDistanceMeters / 1000 || 24) * (0.6 + (idx % 4) * 0.2)).toFixed(1))
-          : 0,
-        fastHours: isPastOrCurrent ? Math.max(Math.round(totalFastHours / (currentMonthIdx + 1) || 120), 40) : 0,
-        calories: isPastOrCurrent ? Math.max(Math.round(totalCalories / (currentMonthIdx + 1) || 1600), 500) : 0,
+        distanceKm: parseFloat(dist.toFixed(2)),
+        fastHours: parseFloat(monthFastHours.toFixed(1)),
+        calories: cals,
       });
     });
   }
@@ -138,14 +159,14 @@ export function calculateSummary(
   return {
     timeframe,
     label: periodLabel,
-    totalDistanceMeters: Math.max(totalDistanceMeters, timeframe === 'month' ? 18500 : timeframe === 'year' ? 240000 : totalDistanceMeters),
-    totalWalkDurationSeconds: Math.max(totalWalkDurationSeconds, totalDistanceMeters > 0 ? totalWalkDurationSeconds : 1800),
+    totalDistanceMeters,
+    totalWalkDurationSeconds,
     avgPaceSecondsPerKm,
-    totalCalories: Math.max(totalCalories, timeframe === 'month' ? 1240 : timeframe === 'year' ? 16800 : totalCalories),
-    totalSteps: Math.max(totalSteps, Math.round(totalDistanceMeters / 0.75)),
-    totalFastHours: Math.max(totalFastHours, timeframe === 'month' ? 142 : timeframe === 'year' ? 1720 : totalFastHours),
+    totalCalories,
+    totalSteps,
+    totalFastHours: parseFloat(totalFastHours.toFixed(1)),
     avgFastHours: parseFloat(avgFastHours.toFixed(1)),
-    completedFastsCount: Math.max(completedFastsCount, timeframe === 'month' ? 14 : timeframe === 'year' ? 185 : completedFastsCount),
+    completedFastsCount,
     totalWaterMl,
     consistencyRatePercent,
     chartData,

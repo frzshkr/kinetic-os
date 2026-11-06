@@ -26,7 +26,7 @@ export const DEFAULT_FASTING_STATE: FastingState = {
   currentFast: null,
   selectedProtocol: '16-8',
   customHours: 16,
-  waterIntakeTodayMl: 1250,
+  waterIntakeTodayMl: 0,
   waterGoalMl: 2500,
   history: [],
 };

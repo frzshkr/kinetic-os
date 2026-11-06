@@ -42,20 +42,20 @@ import { SettingsModal } from './components/settings/SettingsModal';
 
 const DEFAULT_HEALTH_LOG: DailyHealthLog = {
   date: new Date().toISOString().slice(0, 10),
-  sleepHours: 7.8,
-  sleepQuality: 88,
-  readinessScore: 89,
-  weightKg: 72.0,
-  waterMl: 1250,
-  proteinGrams: 85,
-  proteinTargetGrams: 150,
-  carbsGrams: 95,
-  fatGrams: 45,
+  sleepHours: 7.0,
+  sleepQuality: 80,
+  readinessScore: 78,
+  weightKg: 70.0,
+  waterMl: 0,
+  proteinGrams: 0,
+  proteinTargetGrams: 140,
+  carbsGrams: 0,
+  fatGrams: 0,
   habits: {
-    morningSun: true,
-    electrolytes: true,
+    morningSun: false,
+    electrolytes: false,
     stepsTarget: false,
-    preBedBuffer: true,
+    preBedBuffer: false,
   },
 };
 

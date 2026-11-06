@@ -164,7 +164,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-base font-black tracking-tight text-white uppercase">
-                KINETIC
+                STRIDE
               </span>
               <span className="px-2 py-0.5 rounded-full bg-white/10 text-[#E8F84A] text-[9px] font-mono font-bold tracking-wider border border-[#E8F84A]/20">
                 ATHLETE OS
@@ -366,7 +366,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       autoComplete="username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="e.g. farris_kinetic"
+                      placeholder="e.g. farris_stride"
                       className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-600 text-sm font-medium focus:outline-none focus:border-[#E8F84A] transition-colors"
                     />
                   </div>
@@ -596,7 +596,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
           <span>ZERO 3RD-PARTY TRACKING • PERSISTENT ENCRYPTED COCKPIT</span>
         </div>
         <div className="font-mono text-[11px]">
-          KINETIC TELEMETRY v2.4
+          STRIDE TELEMETRY v2.5
         </div>
       </footer>
     </div>

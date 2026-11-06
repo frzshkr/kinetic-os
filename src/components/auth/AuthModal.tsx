@@ -136,7 +136,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div>
                 <div className="flex items-center gap-1.5">
                   <h2 className="text-base font-black tracking-tight text-slate-950 font-['Outfit'] uppercase">
-                    KINETIC OS
+                    STRIDE OS
                   </h2>
                   <span className="px-1.5 py-0.5 rounded-full bg-[#E8F84A] text-slate-950 text-[9px] font-mono font-black border border-black/10">
                     CLOUD

@@ -330,7 +330,7 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
         </div>
         <div>
           <span className="text-[10px] font-mono uppercase font-black text-[#E8F84A] tracking-wider block">
-            KINETIC BIO-INSIGHT ({summary.label})
+            STRIDE BIO-INSIGHT ({summary.label})
           </span>
           <p className="text-xs text-slate-200 mt-0.5 leading-relaxed font-medium">
             {timeframe === 'day'

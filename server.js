@@ -1,5 +1,5 @@
 /**
- * KINETIC OS — High-End Production Multi-User Node.js Server
+ * STRIDE OS — High-End Production Multi-User Node.js Server
  * Full-stack Express backend with Isolated Multi-User SQLite Database, AI Proxy & Static Delivery
  */
 
@@ -68,7 +68,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
     timestamp: new Date().toISOString(),
-    system: 'KINETIC OS Multi-Tenant Backend Core',
+    system: 'STRIDE OS Multi-Tenant Backend Core',
     database: 'SQLite WAL Mode Connected',
     nodeVersion: process.version,
   });
@@ -235,7 +235,7 @@ app.post('/api/ai/chat', optionalToken, async (req, res) => {
     if (apiKey) {
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-      const systemInstruction = `You are KINETIC Coach, an elite personal sports science and metabolic performance advisor.
+      const systemInstruction = `You are STRIDE Coach, an elite personal sports science and metabolic performance advisor.
 User: ${req.user.username || 'Athlete'}.
 Primary domains: Intermittent Fasting (autophagy & ketosis bioenergetics), Brisk Walk (Zone 2 aerobic pacing, cadence), Sleep & Circadian rhythm, and daily macro/protein tracking.
 Rule: Be concise, direct, scientifically accurate, and completely free of robotic filler.`;
@@ -401,5 +401,5 @@ if (fs.existsSync(distPath)) {
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 [KINETIC OS] Multi-User Server running at http://localhost:${PORT}`);
+  console.log(`🚀 [STRIDE OS] Multi-User Server running at http://localhost:${PORT}`);
 });

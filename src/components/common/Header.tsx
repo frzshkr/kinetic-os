@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-black tracking-tight text-slate-950 font-['Outfit'] uppercase">
-                KINETIC
+                STRIDE
               </span>
               <span className="px-1.5 py-0.2 rounded-full bg-[#E8F84A] text-slate-950 text-[9px] font-mono font-black border border-black/10">
                 PRO

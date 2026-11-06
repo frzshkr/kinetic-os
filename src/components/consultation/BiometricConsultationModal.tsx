@@ -385,7 +385,7 @@ export const BiometricConsultationModal: React.FC<BiometricConsultationModalProp
                     PRESCRIBED PROTOCOLS
                   </span>
                   <span className="text-[10px] font-mono font-bold text-slate-400">
-                    KINETIC OS CALIBRATED
+                    STRIDE OS CALIBRATED
                   </span>
                 </div>
 

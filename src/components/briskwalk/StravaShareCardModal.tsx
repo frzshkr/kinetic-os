@@ -68,7 +68,7 @@ export const StravaShareCardModal: React.FC<StravaShareCardModalProps> = ({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Kinetic Brisk Walk - ${distanceKm} km`,
+          title: `STRIDE ${activityLabel} - ${distanceKm} km`,
           text: shareText,
         });
         return;
@@ -108,7 +108,7 @@ export const StravaShareCardModal: React.FC<StravaShareCardModalProps> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-black tracking-wider uppercase text-white">
-                  KINETIC RUN CLUB
+                  STRIDE RUN CLUB
                 </span>
                 <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/10 text-[#E8F84A]">
                   STRAVA TELEMETRY

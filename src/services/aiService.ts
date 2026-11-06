@@ -28,7 +28,7 @@ export const aiService = {
       walkContext = `Last Session: ${formatDistanceKm(last.distanceMeters)} km @ ${formatPace(last.avgPaceSecondsPerKm)}/km (${last.caloriesBurned} kcal).`;
     }
 
-    return `You are KINETIC Coach, an elite personal health and performance advisor for Farris (${userSettings.weightKg}kg, ${userSettings.heightCm}cm, target pace ${userSettings.targetPaceMinPerKm} min/km).
+    return `You are STRIDE Coach, an elite personal health and performance advisor for Farris (${userSettings.weightKg}kg, ${userSettings.heightCm}cm, target pace ${userSettings.targetPaceMinPerKm} min/km).
 Rules:
 - Be concise, direct, and scientifically precise.
 - No boilerplate greetings, no robotic filler, no fluff.
@@ -195,7 +195,7 @@ ${last ? `> **Last session:** ${formatDistanceKm(last.distanceMeters)} km @ ${fo
     }
 
     return {
-      response: `**KINETIC OS Active**
+      response: `**STRIDE OS Active**
 Tracking **${userSettings.userName}** (${userSettings.weightKg}kg • Pace Target: ${userSettings.targetPaceMinPerKm} min/km).
 
 Select an area to optimize:

@@ -34,7 +34,7 @@ export const AICoachChat: React.FC<AICoachChatProps> = ({
     {
       id: 'welcome_1',
       sender: 'assistant',
-      content: `**KINETIC Intelligence Ready.**
+      content: `**STRIDE Intelligence Ready.**
 
 Connected to real-time bio-telemetry:
 - **Fasting:** Autophagy phase detection & window alerts
@@ -174,7 +174,7 @@ What do you want to optimize right now?`,
           </div>
           <div>
             <h3 className="text-sm font-black text-slate-950 flex items-center gap-1.5 font-['Outfit'] uppercase">
-              KINETIC COACH
+              STRIDE COACH
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </h3>
             <p className="text-[10px] text-slate-400 font-mono font-medium">
@@ -284,7 +284,7 @@ What do you want to optimize right now?`,
           <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-white border border-black/10 shadow-sm w-fit">
             <Sparkles className="w-4 h-4 text-black animate-spin" />
             <span className="text-xs text-slate-600 font-mono font-medium">
-              KINETIC is computing response...
+              STRIDE is computing response...
             </span>
           </div>
         )}

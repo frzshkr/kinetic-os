@@ -51,7 +51,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `kinetic-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `stride-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -177,7 +177,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               INTELLIGENCE ENGINE
             </h4>
             <p className="text-[11px] text-slate-500 mb-3 font-medium">
-              By default, KINETIC uses its built-in sports science engine (zero API key required). To connect directly to Google Gemini 2.5 Flash, enter your API Key below:
+              By default, STRIDE uses its built-in sports science engine (zero API key required). To connect directly to Google Gemini 2.5 Flash, enter your API Key below:
             </p>
 
             <div className="relative">
@@ -279,7 +279,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Footer */}
         <div className="mt-6 pt-4 border-t border-black/[0.06] flex items-center justify-between">
           <span className="text-[10px] text-slate-400 font-mono font-medium">
-            KINETIC OS • Editorial Edition
+            STRIDE OS • Elite Edition
           </span>
 
           <div className="flex items-center gap-2">

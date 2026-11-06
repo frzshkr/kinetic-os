@@ -1,10 +1,7 @@
 # Multi-stage Dockerfile for KINETIC OS
-FROM node:22-slim AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
-
-# Install build essentials for native compilation
-RUN apt-get update && apt-get install -y python3 make g++ gcc && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
 RUN npm install
@@ -13,13 +10,10 @@ COPY . .
 RUN npm run build
 
 # Runner stage
-FROM node:22-slim AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
-
-# Install runtime dependencies for better-sqlite3 native addon
-RUN apt-get update && apt-get install -y python3 make g++ gcc && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
 RUN npm install --omit=dev

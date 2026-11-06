@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Volume2, VolumeX, Settings, Zap, Flame, Footprints, User, LogOut, ShieldCheck } from 'lucide-react';
+import { Volume2, VolumeX, Settings, Zap, Flame, Footprints, User, LogOut, ShieldCheck, Target, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FastingState, UserSettings, ActiveTab, AuthUser } from '../../types';
 import { sound } from '../../utils/audio';
@@ -14,6 +14,7 @@ interface HeaderProps {
   onToggleSound: () => void;
   onOpenAuth: () => void;
   onLogout: () => void;
+  onOpenConsultation?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleSound,
   onOpenAuth,
   onLogout,
+  onOpenConsultation,
 }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
@@ -63,8 +65,10 @@ export const Header: React.FC<HeaderProps> = ({
       ? (Date.now() - fastingState.currentFast.startTime) / (1000 * 3600)
       : 0;
 
+  const isGuest = currentUser?.id === 'guest_user';
+
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-2xl bg-[#f5f2eb]/85 border-b border-black/[0.05] transition-all">
+    <header className="sticky top-0 z-40 w-full backdrop-blur-2xl bg-[#f5f2eb]/90 border-b border-black/[0.05] transition-all">
       <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
         
         {/* Brand identity - Editorial Gen Z */}
@@ -86,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <p className="text-[10px] text-slate-500 font-medium tracking-tight">
-              {currentUser ? `@${currentUser.username}` : userSettings.userName} • SQLite Telemetry
+              {currentUser ? `@${currentUser.username}` : userSettings.userName} • Telemetry Cockpit
             </p>
           </div>
         </motion.div>
@@ -145,9 +149,13 @@ export const Header: React.FC<HeaderProps> = ({
                   sound.playClick();
                   setIsUserMenuOpen(!isUserMenuOpen);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white hover:bg-slate-50 border border-black/[0.08] text-slate-900 shadow-xs transition-all"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border text-slate-900 shadow-xs transition-all ${
+                  isGuest ? 'bg-amber-50 border-amber-200' : 'bg-white hover:bg-slate-50 border-black/[0.08]'
+                }`}
               >
-                <div className="w-5 h-5 rounded-full bg-[#E8F84A] text-slate-950 flex items-center justify-center text-[10px] font-black border border-black/10">
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border ${
+                  isGuest ? 'bg-amber-400 text-black border-amber-500' : 'bg-[#E8F84A] text-slate-950 border-black/10'
+                }`}>
                   {currentUser.username.charAt(0).toUpperCase()}
                 </div>
                 <span className="text-xs font-bold font-mono text-slate-800">
@@ -177,7 +185,7 @@ export const Header: React.FC<HeaderProps> = ({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 4, scale: 0.98 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-56 rounded-2xl bg-white p-3 shadow-xl border border-black/[0.08] z-50"
+                  className="absolute right-0 mt-2 w-64 rounded-2xl bg-white p-3 shadow-xl border border-black/[0.08] z-50 font-['Outfit']"
                 >
                   <div className="pb-2.5 mb-2 border-b border-black/[0.06]">
                     <div className="flex items-center gap-2">
@@ -193,11 +201,40 @@ export const Header: React.FC<HeaderProps> = ({
                         </p>
                       </div>
                     </div>
-                    <div className="mt-2 flex items-center gap-1 text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
-                      <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                      <span>Isolated SQLite Active</span>
+                    <div className="mt-2 flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded-lg">
+                      {isGuest ? (
+                        <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-bold">
+                          ⚡ GUEST PASS (Session Only)
+                        </span>
+                      ) : (
+                        <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                          <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                          <span>Encrypted Vault Active</span>
+                        </div>
+                      )}
                     </div>
                   </div>
+
+                  {/* Consultation shortcut */}
+                  {onOpenConsultation && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        sound.playClick();
+                        onOpenConsultation();
+                      }}
+                      className="w-full text-left px-2.5 py-2 rounded-xl text-xs font-medium text-slate-800 hover:bg-[#F5F2EB] transition-colors flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Target className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Biometric Targets</span>
+                      </div>
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-black text-[#E8F84A]">
+                        PLAN
+                      </span>
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -205,10 +242,10 @@ export const Header: React.FC<HeaderProps> = ({
                       setIsUserMenuOpen(false);
                       onOpenAuth();
                     }}
-                    className="w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors flex items-center gap-2"
+                    className="w-full text-left px-2.5 py-2 rounded-xl text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors flex items-center gap-2"
                   >
                     <User className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Switch Account</span>
+                    <span>{isGuest ? 'Create Full Account' : 'Switch Account'}</span>
                   </button>
 
                   <button
@@ -218,7 +255,7 @@ export const Header: React.FC<HeaderProps> = ({
                       sound.playNotification();
                       onLogout();
                     }}
-                    className="w-full text-left mt-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-2"
+                    className="w-full text-left mt-1 px-2.5 py-2 rounded-xl text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-2"
                   >
                     <LogOut className="w-3.5 h-3.5 text-rose-500" />
                     <span>Sign Out</span>

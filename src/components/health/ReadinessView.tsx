@@ -16,8 +16,12 @@ import {
   ShieldCheck,
   Flame,
   Activity,
+  Camera,
+  Target,
+  ArrowRight,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { FoodScannerModal } from './FoodScannerModal';
 
 interface ReadinessViewProps {
   healthLog: DailyHealthLog;
@@ -25,6 +29,7 @@ interface ReadinessViewProps {
   fastingState: FastingState;
   recentWalks: BriskwalkSession[];
   onUpdateHealthLog: (updated: DailyHealthLog) => void;
+  onOpenConsultation?: () => void;
 }
 
 export const ReadinessView: React.FC<ReadinessViewProps> = ({
@@ -33,9 +38,11 @@ export const ReadinessView: React.FC<ReadinessViewProps> = ({
   fastingState,
   recentWalks,
   onUpdateHealthLog,
+  onOpenConsultation,
 }) => {
   const [isEditingWeight, setIsEditingWeight] = useState(false);
   const [weightInput, setWeightInput] = useState(healthLog.weightKg.toString());
+  const [isFoodScannerOpen, setIsFoodScannerOpen] = useState(false);
 
   // Calculate dynamic readiness score based on sleep, fasting, and walk exertion
   const calculateDynamicScore = (log: DailyHealthLog): number => {
@@ -103,9 +110,20 @@ export const ReadinessView: React.FC<ReadinessViewProps> = ({
     setIsEditingWeight(false);
   };
 
+  const handleLogScannedMeal = (meal: { protein: number; calories: number; carbs: number; fat: number; name: string }) => {
+    sound.playMilestone();
+    const updated: DailyHealthLog = {
+      ...healthLog,
+      proteinGrams: healthLog.proteinGrams + meal.protein,
+      carbsGrams: healthLog.carbsGrams + meal.carbs,
+      fatGrams: healthLog.fatGrams + meal.fat,
+    };
+    onUpdateHealthLog(updated);
+  };
+
   return (
     <div className="w-full space-y-4">
-      {/* Header Title */}
+      {/* Header Title with Consultation Button */}
       <div className="flex items-center justify-between">
         <div>
           <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-black">
@@ -115,12 +133,24 @@ export const ReadinessView: React.FC<ReadinessViewProps> = ({
             DAILY READINESS
           </h2>
         </div>
-        <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-white border border-black/10 shadow-xs">
-          {healthLog.date}
-        </span>
+        <div className="flex items-center gap-2">
+          {onOpenConsultation && (
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              onClick={onOpenConsultation}
+              className="px-3 py-1.5 rounded-full bg-black text-[#E8F84A] text-xs font-mono font-bold flex items-center gap-1.5 shadow-xs hover:bg-slate-900 transition-colors"
+            >
+              <Target className="w-3.5 h-3.5" />
+              <span>Bio Consultation</span>
+            </motion.button>
+          )}
+          <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-full bg-white border border-black/10 shadow-xs">
+            {healthLog.date}
+          </span>
+        </div>
       </div>
 
-      {/* 1. Readiness Score Bento Dial (Whoop / Oura style) */}
+      {/* 1. Readiness Score Bento Dial */}
       <div className="bg-white/90 backdrop-blur-2xl rounded-[32px] p-6 border border-black/[0.06] shadow-sm relative overflow-hidden">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           {/* Circular Readiness Gauge */}
@@ -183,7 +213,50 @@ export const ReadinessView: React.FC<ReadinessViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Sleep & Circadian Fasting Buffer Bento */}
+      {/* 2. AI Food Vision Scanner Hero Card */}
+      <motion.div
+        whileHover={{ y: -2 }}
+        className="bg-gradient-to-br from-black via-zinc-900 to-zinc-950 text-white rounded-[32px] p-6 border border-white/10 shadow-lg relative overflow-hidden group"
+      >
+        <div className="absolute top-0 right-0 w-56 h-56 bg-[#E8F84A]/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-[#E8F84A] text-black flex items-center justify-center font-black shrink-0 shadow-md">
+              <Camera className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-black uppercase tracking-tight text-white font-['Outfit']">
+                  AI FOOD VISION SCANNER
+                </h3>
+                <span className="px-2 py-0.5 rounded-full bg-white/10 text-[#E8F84A] text-[9px] font-mono font-bold border border-[#E8F84A]/30">
+                  CAMERA TELEMETRY
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 mt-0.5 max-w-md">
+                Snap or upload any meal. AI extracts calories, protein, carbs, and fat with 1-tap logging.
+              </p>
+            </div>
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={() => {
+              sound.playClick();
+              setIsFoodScannerOpen(true);
+            }}
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-[#E8F84A] text-black font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:bg-[#d9e843] transition-colors shrink-0"
+          >
+            <Camera className="w-4 h-4 fill-black" />
+            <span>Scan Meal Now</span>
+            <ArrowRight className="w-4 h-4" />
+          </motion.button>
+        </div>
+      </motion.div>
+
+      {/* 3. Sleep & Circadian Fasting Buffer Bento */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Sleep Tracker Card */}
         <div className="bg-white/80 backdrop-blur-xl rounded-[28px] p-5 border border-black/[0.06] shadow-sm">
@@ -215,7 +288,6 @@ export const ReadinessView: React.FC<ReadinessViewProps> = ({
               <span className="text-xs font-mono font-bold text-slate-500 ml-1">HOURS</span>
             </div>
 
-            {/* Quick +/- Sleep Adjusters */}
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => handleAdjustSleep(-0.5)}
@@ -276,7 +348,7 @@ export const ReadinessView: React.FC<ReadinessViewProps> = ({
         </div>
       </div>
 
-      {/* 3. Protein & Macronutrient Tracker Card */}
+      {/* 4. Protein & Macronutrient Tracker Card */}
       <div className="bg-white/80 backdrop-blur-xl rounded-[28px] p-5 border border-black/[0.06] shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
@@ -354,7 +426,7 @@ export const ReadinessView: React.FC<ReadinessViewProps> = ({
         </div>
       </div>
 
-      {/* 4. Daily Biohacking Habit Matrix */}
+      {/* 5. Daily Biohacking Habit Matrix */}
       <div className="bg-white/80 backdrop-blur-xl rounded-[28px] p-5 border border-black/[0.06] shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -432,7 +504,7 @@ export const ReadinessView: React.FC<ReadinessViewProps> = ({
         </div>
       </div>
 
-      {/* 5. Morning Fasted Weight Tracker */}
+      {/* 6. Morning Fasted Weight Tracker */}
       <div className="bg-white/80 backdrop-blur-xl rounded-[28px] p-5 border border-black/[0.06] shadow-sm flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-2xl bg-black text-[#E8F84A] flex items-center justify-center font-black">
@@ -479,6 +551,14 @@ export const ReadinessView: React.FC<ReadinessViewProps> = ({
           </button>
         )}
       </div>
+
+      {/* Food Vision Scanner Modal */}
+      <FoodScannerModal
+        isOpen={isFoodScannerOpen}
+        onClose={() => setIsFoodScannerOpen(false)}
+        onLogMeal={handleLogScannedMeal}
+        geminiApiKey={userSettings.geminiApiKey}
+      />
     </div>
   );
 };

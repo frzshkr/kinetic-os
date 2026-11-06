@@ -39,6 +39,7 @@ import { ReadinessView } from './components/health/ReadinessView';
 import { SummaryView } from './components/analytics/SummaryView';
 import { AICoachChat } from './components/assistant/AICoachChat';
 import { SettingsModal } from './components/settings/SettingsModal';
+import { BiometricConsultationModal } from './components/consultation/BiometricConsultationModal';
 
 const DEFAULT_HEALTH_LOG: DailyHealthLog = {
   date: new Date().toISOString().slice(0, 10),
@@ -67,6 +68,7 @@ export const App: React.FC = () => {
 
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [isConsultationOpen, setIsConsultationOpen] = useState<boolean>(false);
 
   // Fasting State
   const [fastingState, setFastingState] = useState<FastingState>(DEFAULT_FASTING_STATE);
@@ -110,9 +112,55 @@ export const App: React.FC = () => {
     });
   };
 
-  const handleAuthSuccess = (user: AuthUser) => {
+  const handleAuthSuccess = (user: AuthUser, isNewRegistration?: boolean) => {
     setCurrentUser(user);
     loadUserTelemetry(user);
+    if (isNewRegistration) {
+      setIsConsultationOpen(true);
+    }
+  };
+
+  const handleApplyConsultationPlan = (plan: {
+    weightKg: number;
+    heightCm: number;
+    goal: any;
+    idealWeightMinKg: number;
+    idealWeightMaxKg: number;
+    targetProteinGrams: number;
+    targetWaterMl: number;
+    targetCaloriesKcal: number;
+    targetPaceMinPerKm: number;
+    recommendedProtocol: string;
+  }) => {
+    const updatedSettings: UserSettings = {
+      ...settings,
+      weightKg: plan.weightKg,
+      heightCm: plan.heightCm,
+      targetPaceMinPerKm: plan.targetPaceMinPerKm,
+      preferredFastingProtocol: (plan.recommendedProtocol as any) || settings.preferredFastingProtocol,
+    };
+    setSettings(updatedSettings);
+    storage.saveSettings(updatedSettings);
+    dbService.saveSettings(updatedSettings);
+
+    const updatedHealth: DailyHealthLog = {
+      ...healthLog,
+      weightKg: plan.weightKg,
+      proteinTargetGrams: plan.targetProteinGrams,
+    };
+    setHealthLog(updatedHealth);
+    dbService.saveHealthLog(updatedHealth);
+
+    const updatedFasting: FastingState = {
+      ...fastingState,
+      waterGoalMl: plan.targetWaterMl,
+      selectedProtocol: (plan.recommendedProtocol as any) || fastingState.selectedProtocol,
+    };
+    setFastingState(updatedFasting);
+    storage.saveFastingState(updatedFasting);
+
+    sound.playCelebration();
+    setIsConsultationOpen(false);
   };
 
   const handleGuestExplore = () => {
@@ -481,7 +529,24 @@ export const App: React.FC = () => {
         onToggleSound={handleToggleSound}
         onOpenAuth={handleLogout}
         onLogout={handleLogout}
+        onOpenConsultation={() => setIsConsultationOpen(true)}
       />
+
+      {/* Guest Mode Distinction Banner */}
+      {currentUser.id === 'guest_user' && (
+        <div className="bg-amber-400 text-slate-950 px-4 py-2 text-xs font-mono font-bold flex items-center justify-between shadow-xs sticky top-16 z-30">
+          <div className="flex items-center gap-2 truncate">
+            <span className="w-2 h-2 rounded-full bg-black animate-ping shrink-0" />
+            <span className="truncate">⚡ GUEST PREVIEW • Records are temporary. Create your vault to save your PRs.</span>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="shrink-0 px-2.5 py-1 rounded-lg bg-black text-[#E8F84A] text-[11px] font-black uppercase hover:bg-slate-900 transition-colors ml-2"
+          >
+            Create Vault
+          </button>
+        </div>
+      )}
 
       {/* Main Viewport with Page Transitions */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 pt-5 pb-6">
@@ -556,6 +621,7 @@ export const App: React.FC = () => {
                 isTracking={isWalkTracking}
                 isPaused={isWalkPaused}
                 activeSession={activeWalkSession}
+                athleteName={currentUser.displayName || currentUser.username}
                 onStart={handleStartWalk}
                 onPause={handlePauseWalk}
                 onResume={handleResumeWalk}
@@ -581,6 +647,7 @@ export const App: React.FC = () => {
                 fastingState={fastingState}
                 recentWalks={walkHistory}
                 onUpdateHealthLog={handleUpdateHealthLog}
+                onOpenConsultation={() => setIsConsultationOpen(true)}
               />
             </motion.div>
           )}
@@ -637,6 +704,15 @@ export const App: React.FC = () => {
         settings={settings}
         onClose={() => setIsSettingsOpen(false)}
         onSave={handleSaveSettings}
+      />
+
+      {/* Biometric Sports-Science Consultation Modal */}
+      <BiometricConsultationModal
+        isOpen={isConsultationOpen}
+        onClose={() => setIsConsultationOpen(false)}
+        onApplyPlan={handleApplyConsultationPlan}
+        initialWeightKg={settings.weightKg || 67}
+        initialHeightCm={settings.heightCm || 166}
       />
     </div>
   );

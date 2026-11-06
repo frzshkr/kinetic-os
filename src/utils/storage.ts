@@ -16,7 +16,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   geminiApiKey: '',
   soundEnabled: true,
   voiceGuidanceEnabled: true,
-  voiceLanguage: 'ms-MY',
+  voiceLanguage: 'en-US',
   darkTheme: 'obsidian',
   unit: 'metric',
 };

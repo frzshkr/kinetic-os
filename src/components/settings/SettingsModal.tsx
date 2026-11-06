@@ -78,7 +78,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const handlePurgeAllData = () => {
     sound.playClick();
-    if (window.confirm('Adakah anda pasti mahu mengosongkan semua data dan mula semula dari kosong (0)?')) {
+    if (window.confirm('Are you sure you want to purge all records and restart from zero (0)?')) {
       localStorage.clear();
       sound.playNotification();
       window.location.reload();
@@ -292,7 +292,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 className="w-full py-2.5 px-3 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold font-mono flex items-center justify-center gap-2 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                <span>PURGE SEMUA DATA & MULA DARI KOSONG (0)</span>
+                <span>PURGE ALL DATA & RESTART FROM ZERO (0)</span>
               </button>
             </div>
           </div>

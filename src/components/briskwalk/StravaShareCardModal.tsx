@@ -57,13 +57,13 @@ export const StravaShareCardModal: React.FC<StravaShareCardModalProps> = ({
 
   const handleShare = async () => {
     sound.playClick();
-    const shareText = `🏃‍♂️ ${activityLabel} SELESAI // ${athleteName.toUpperCase()}
-📍 Jarak: ${distanceKm} KM
-⏱ Masa: ${durationStr}
-⚡ Purata Pace: ${avgPaceStr} /km
-🔥 Kalori: ${calories} kcal (${steps.toLocaleString()} langkah)
+    const shareText = `🏃‍♂️ ${activityLabel} COMPLETE // ${athleteName.toUpperCase()}
+📍 Distance: ${distanceKm} KM
+⏱ Duration: ${durationStr}
+⚡ Avg Pace: ${avgPaceStr} /km
+🔥 Burn: ${calories} kcal (${steps.toLocaleString()} steps)
 ⚡ Cadence: ${cadenceSpm} SPM
-🔒 Disimpan dalam STRIDE`;
+🔒 Logged in STRIDE Vault`;
 
     if (navigator.share) {
       try {

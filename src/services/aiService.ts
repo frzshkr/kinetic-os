@@ -79,7 +79,7 @@ User Telemetry: ${fastingContext} | ${walkContext}`;
     systemPrompt: string,
     apiKey: string
   ): Promise<{ response: string; suggestions?: string[] }> {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`;
 
     const formattedContents = [
       { role: 'user', parts: [{ text: systemPrompt }] },

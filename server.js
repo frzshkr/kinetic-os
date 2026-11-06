@@ -233,7 +233,7 @@ app.post('/api/ai/chat', optionalToken, async (req, res) => {
     const apiKey = context?.userSettings?.geminiApiKey || process.env.GEMINI_API_KEY;
 
     if (apiKey) {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`;
 
       const systemInstruction = `You are STRIDE Coach, an elite personal sports science and metabolic performance advisor.
 User: ${req.user.username || 'User'}.
@@ -293,7 +293,7 @@ app.post('/api/ai/food-vision', optionalToken, async (req, res) => {
     if (apiKey && imageBase64) {
       // Strip base64 header if present
       const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`;
 
       const promptText = `You are an elite sports nutritionist and computer-vision meal analyzer for user ${req.user.username || 'Farris'}.
 Analyze this food photograph. Estimate its nutritional contents with high precision.

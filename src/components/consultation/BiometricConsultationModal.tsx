@@ -129,13 +129,13 @@ export const BiometricConsultationModal: React.FC<BiometricConsultationModalProp
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ type: 'spring', damping: 26, stiffness: 360 }}
-          className="relative w-full max-w-xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-black/[0.08] my-8 overflow-hidden"
+          className="relative w-full max-w-xl bg-white rounded-3xl p-5 sm:p-8 shadow-2xl border border-black/[0.08] my-auto max-h-[92vh] overflow-y-auto"
         >
           {/* Ambient Corner Glow */}
           <div className="absolute top-0 right-0 w-48 h-48 bg-[#E8F84A]/35 rounded-full blur-3xl pointer-events-none" />

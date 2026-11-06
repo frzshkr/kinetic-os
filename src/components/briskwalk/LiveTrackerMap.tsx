@@ -132,7 +132,7 @@ export const LiveTrackerMap: React.FC<LiveTrackerMapProps> = ({
       <button
         onClick={handleCenter}
         className="absolute bottom-3 right-3 z-10 p-2.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 text-emerald-600 hover:text-emerald-700 shadow-md transition-all active:scale-95"
-        title="Pusatkan Lokasi Saya"
+        title="Center My Location"
       >
         <Crosshair className="w-4 h-4" />
       </button>
@@ -145,7 +145,7 @@ export const LiveTrackerMap: React.FC<LiveTrackerMapProps> = ({
           }`}
         />
         <span className="text-slate-700 font-bold">
-          {currentLocation ? `GPS Lock (±${Math.round(currentLocation.accuracy)}m)` : 'Mencari Satelit GPS...'}
+          {currentLocation ? `GPS Lock (±${Math.round(currentLocation.accuracy)}m)` : 'Acquiring GPS Signal...'}
         </span>
       </div>
     </div>

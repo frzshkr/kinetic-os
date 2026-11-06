@@ -88,13 +88,13 @@ export const StravaShareCardModal: React.FC<StravaShareCardModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-['Outfit']">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md font-['Outfit'] overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="w-full max-w-md bg-[#09090B] text-white rounded-[32px] border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden relative"
+        className="w-full max-w-md bg-[#09090B] text-white rounded-[28px] sm:rounded-[32px] border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.9)] my-auto max-h-[92vh] overflow-y-auto relative"
       >
         {/* Glow Accent */}
         <div className="absolute top-0 right-0 w-48 h-48 bg-[#E8F84A]/15 blur-3xl pointer-events-none" />

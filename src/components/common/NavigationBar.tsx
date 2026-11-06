@@ -27,36 +27,36 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     {
       id: 'briskwalk' as ActiveTab,
       label: 'Move',
-      badge: isWalkActive ? 'LIVE' : 'RUN/WALK',
+      badge: isWalkActive ? 'LIVE' : 'GPS',
       icon: Footprints,
     },
     {
       id: 'health' as ActiveTab,
       label: 'Bio',
-      badge: 'RECOVERY',
+      badge: 'HEALTH',
       icon: HeartPulse,
     },
     {
       id: 'analytics' as ActiveTab,
       label: 'Stats',
-      badge: 'D/M/Y',
+      badge: 'METRICS',
       icon: BarChart3,
     },
     {
       id: 'assistant' as ActiveTab,
       label: 'Coach',
-      badge: 'AI',
+      badge: 'AI COACH',
       icon: Sparkles,
     },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 p-4 pointer-events-none">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 p-2.5 sm:p-4 pb-[max(0.6rem,env(safe-area-inset-bottom))] pointer-events-none">
       <motion.div 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-        className="max-w-lg mx-auto backdrop-blur-2xl bg-black/90 text-white rounded-[28px] p-2 shadow-[0_20px_50px_rgba(0,0,0,0.25)] pointer-events-auto border border-white/10"
+        className="max-w-lg mx-auto backdrop-blur-2xl bg-black/92 text-white rounded-[24px] sm:rounded-[28px] p-1 sm:p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] pointer-events-auto border border-white/10"
       >
         <div className="grid grid-cols-5 gap-1 relative">
           {tabs.map((tab) => {
@@ -83,13 +83,13 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
                   />
                 )}
 
-                <Icon className={`w-4 h-4 sm:w-5 sm:h-5 mb-1 transition-transform ${isActive ? 'scale-110' : ''}`} />
+                <Icon className={`w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1 transition-transform ${isActive ? 'scale-110' : ''}`} />
                 
                 <span className="text-[10px] sm:text-[11px] font-black tracking-tight font-['Outfit']">
                   {tab.label}
                 </span>
 
-                <span className={`text-[8px] sm:text-[9px] font-mono font-bold leading-none mt-0.5 ${isActive ? 'text-black/70' : 'text-slate-500'}`}>
+                <span className={`text-[8px] sm:text-[9px] font-mono font-bold leading-none mt-0.5 truncate max-w-full ${isActive ? 'text-black/80' : 'text-slate-500'}`}>
                   {tab.badge}
                 </span>
               </button>

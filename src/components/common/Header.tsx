@@ -75,9 +75,9 @@ export const Header: React.FC<HeaderProps> = ({
         <motion.div 
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-2.5"
+          className="flex items-center gap-2 sm:gap-2.5 shrink-0"
         >
-          <div className="w-9 h-9 rounded-2xl bg-black text-white flex items-center justify-center font-black shadow-sm">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-black text-white flex items-center justify-center font-black shadow-sm shrink-0">
             <Zap className="w-4 h-4 fill-current text-[#E8F84A]" />
           </div>
           <div>
@@ -89,8 +89,9 @@ export const Header: React.FC<HeaderProps> = ({
                 PRO
               </span>
             </div>
-            <p className="text-[10px] text-slate-500 font-medium tracking-tight">
-              {currentUser ? `@${currentUser.username}` : userSettings.userName} • Telemetry Cockpit
+            <p className="text-[10px] text-slate-500 font-medium tracking-tight truncate max-w-[100px] sm:max-w-none">
+              {currentUser ? `@${currentUser.username}` : userSettings.userName}
+              <span className="hidden sm:inline"> • Telemetry Cockpit</span>
             </p>
           </div>
         </motion.div>
@@ -99,7 +100,7 @@ export const Header: React.FC<HeaderProps> = ({
         <motion.div 
           layout
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 border border-black/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.04)]"
+          className="hidden xs:flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/90 border border-black/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.04)]"
         >
           <AnimatePresence mode="wait">
             {isWalkActive ? (
@@ -108,10 +109,10 @@ export const Header: React.FC<HeaderProps> = ({
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
-                className="flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-600"
+                className="flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-mono font-bold text-emerald-600"
               >
-                <Footprints className="w-3.5 h-3.5 animate-bounce" />
-                <span>TRACKING LIVE</span>
+                <Footprints className="w-3.5 h-3.5 animate-bounce shrink-0" />
+                <span>TRACKING</span>
               </motion.div>
             ) : fastingState.isActive ? (
               <motion.div
@@ -119,17 +120,17 @@ export const Header: React.FC<HeaderProps> = ({
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
-                className="flex items-center gap-1.5 text-xs font-mono font-bold text-rose-500"
+                className="flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-mono font-bold text-rose-500"
               >
-                <Flame className="w-3.5 h-3.5 fill-current animate-pulse" />
-                <span>FASTING {fastingElapsedHrs.toFixed(1)}H</span>
+                <Flame className="w-3.5 h-3.5 fill-current animate-pulse shrink-0" />
+                <span>FAST {fastingElapsedHrs.toFixed(1)}H</span>
               </motion.div>
             ) : (
               <motion.span
                 key="idle"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-xs font-mono font-semibold text-slate-700 tracking-wider"
+                className="text-[11px] sm:text-xs font-mono font-semibold text-slate-700 tracking-wider"
               >
                 {currentTime || '00:00:00'}
               </motion.span>
@@ -138,7 +139,7 @@ export const Header: React.FC<HeaderProps> = ({
         </motion.div>
 
         {/* User & Settings Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           
           {/* User Account Button & Dropdown */}
           <div className="relative" ref={menuRef}>
@@ -149,16 +150,16 @@ export const Header: React.FC<HeaderProps> = ({
                   sound.playClick();
                   setIsUserMenuOpen(!isUserMenuOpen);
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border text-slate-900 shadow-xs transition-all ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-2xl border text-slate-900 shadow-xs transition-all ${
                   isGuest ? 'bg-amber-50 border-amber-200' : 'bg-white hover:bg-slate-50 border-black/[0.08]'
                 }`}
               >
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border ${
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border shrink-0 ${
                   isGuest ? 'bg-amber-400 text-black border-amber-500' : 'bg-[#E8F84A] text-slate-950 border-black/10'
                 }`}>
                   {currentUser.username.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-xs font-bold font-mono text-slate-800">
+                <span className="text-xs font-bold font-mono text-slate-800 truncate max-w-[65px] sm:max-w-[120px]">
                   {currentUser.username}
                 </span>
               </motion.button>

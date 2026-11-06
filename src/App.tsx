@@ -9,6 +9,7 @@ import {
   DailyHealthLog,
   AuthUser,
   ActivityType,
+  WorkoutGoal,
 } from './types';
 import { storage, DEFAULT_SETTINGS, DEFAULT_FASTING_STATE } from './utils/storage';
 import { dbService } from './services/dbService';
@@ -19,7 +20,11 @@ import {
   calculateHaversineDistance,
   calculateWalkCalories,
   estimateSteps,
+  formatPace,
+  formatDuration,
+  formatDistanceKm,
 } from './utils/geo';
+import { Play, Footprints } from 'lucide-react';
 
 // Components
 import { Header } from './components/common/Header';
@@ -36,6 +41,7 @@ import { LiveTrackerMap } from './components/briskwalk/LiveTrackerMap';
 import { WorkoutControls } from './components/briskwalk/WorkoutControls';
 import { WorkoutHistory } from './components/briskwalk/WorkoutHistory';
 import { ActivityTypeSelector } from './components/briskwalk/ActivityTypeSelector';
+import { WorkoutSetupForm } from './components/briskwalk/WorkoutSetupForm';
 
 import { ReadinessView } from './components/health/ReadinessView';
 import { SummaryView } from './components/analytics/SummaryView';
@@ -82,6 +88,8 @@ export const App: React.FC = () => {
   const [isWalkPaused, setIsWalkPaused] = useState<boolean>(false);
   const [activeWalkSession, setActiveWalkSession] = useState<BriskwalkSession | null>(null);
   const [walkHistory, setWalkHistory] = useState<BriskwalkSession[]>([]);
+  const [moveSubTab, setMoveSubTab] = useState<'cockpit' | 'history'>('cockpit');
+  const [inWorkoutViewMode, setInWorkoutViewMode] = useState<'hud' | 'map' | 'split'>('hud');
 
   // Daily Health & Readiness State
   const [healthLog, setHealthLog] = useState<DailyHealthLog>(DEFAULT_HEALTH_LOG);
@@ -439,10 +447,11 @@ export const App: React.FC = () => {
   };
 
   // Briskwalk Handlers
-  const handleStartWalk = () => {
+  const handleStartWalk = (goal?: WorkoutGoal) => {
     const newSession: BriskwalkSession = {
       id: `walk_${Date.now()}`,
       activityType: selectedActivity,
+      targetGoal: goal,
       startTime: Date.now(),
       durationSeconds: 0,
       distanceMeters: 0,
@@ -460,6 +469,7 @@ export const App: React.FC = () => {
     setActiveWalkSession(newSession);
     setIsWalkTracking(true);
     setIsWalkPaused(false);
+    setMoveSubTab('cockpit');
   };
 
   const handlePauseWalk = () => {
@@ -600,7 +610,7 @@ export const App: React.FC = () => {
             </motion.div>
           )}
 
-          {/* TAB 2: BRISK WALK */}
+          {/* TAB 2: MOVE (RUNNING, BRISK WALK & WORKOUT COCKPIT) */}
           {activeTab === 'briskwalk' && (
             <motion.div
               key="briskwalk-view"
@@ -608,41 +618,178 @@ export const App: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-              className="space-y-4"
+              className="space-y-4 font-['Outfit']"
             >
-              {/* Activity Mode Selector: Running, Brisk Walk, Fast Walk, Jogging, Casual Walk */}
-              <ActivityTypeSelector
-                selectedActivity={selectedActivity}
-                onSelectActivity={(act) => setSelectedActivity(act)}
-                disabled={isWalkTracking}
-              />
+              {/* Layer Header Sub-navigation: Cockpit vs History */}
+              <div className="flex items-center justify-between p-1 rounded-2xl bg-white/80 backdrop-blur-md border border-black/[0.06] shadow-2xs">
+                <button
+                  onClick={() => {
+                    sound.playClick();
+                    setMoveSubTab('cockpit');
+                  }}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${
+                    moveSubTab === 'cockpit'
+                      ? 'bg-black text-[#E8F84A] shadow-xs'
+                      : 'text-slate-600 hover:text-black'
+                  }`}
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>{isWalkTracking ? 'Active Cockpit' : 'Workout Setup'}</span>
+                  {isWalkTracking && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  )}
+                </button>
 
-              <BriskwalkHUD
-                session={activeWalkSession}
-                userSettings={settings}
-                activityType={selectedActivity}
-              />
+                <button
+                  onClick={() => {
+                    sound.playClick();
+                    setMoveSubTab('history');
+                  }}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${
+                    moveSubTab === 'history'
+                      ? 'bg-black text-[#E8F84A] shadow-xs'
+                      : 'text-slate-600 hover:text-black'
+                  }`}
+                >
+                  <Footprints className="w-3.5 h-3.5" />
+                  <span>History ({walkHistory.length})</span>
+                </button>
+              </div>
 
-              <LiveTrackerMap
-                currentLocation={currentLocation}
-                path={activeWalkSession?.path || []}
-                isTracking={isWalkTracking && !isWalkPaused}
-                onCenterMap={() => {}}
-              />
+              {/* LAYER CONTENT */}
+              <AnimatePresence mode="wait">
+                {moveSubTab === 'history' ? (
+                  <motion.div
+                    key="history-layer"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <WorkoutHistory history={walkHistory} />
+                  </motion.div>
+                ) : !isWalkTracking ? (
+                  /* LAYER 1: PRE-WORKOUT SETUP FORM */
+                  <motion.div
+                    key="setup-layer"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <WorkoutSetupForm
+                      selectedActivity={selectedActivity}
+                      onSelectActivity={(act) => setSelectedActivity(act)}
+                      userSettings={settings}
+                      currentLocation={currentLocation}
+                      onStartWorkout={handleStartWalk}
+                      lastSessionSummary={
+                        walkHistory.length > 0
+                          ? {
+                              distanceKm: formatDistanceKm(walkHistory[0].distanceMeters),
+                              paceStr: formatPace(walkHistory[0].avgPaceSecondsPerKm),
+                              durationStr: formatDuration(walkHistory[0].durationSeconds),
+                            }
+                          : null
+                      }
+                    />
+                  </motion.div>
+                ) : (
+                  /* LAYER 2: IN-WORKOUT LIVE COCKPIT */
+                  <motion.div
+                    key="live-cockpit-layer"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-3.5"
+                  >
+                    {/* View Switcher: HUD vs Map vs Split */}
+                    <div className="flex items-center justify-between px-1">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                        <span className="text-xs font-mono font-black text-slate-800 uppercase">
+                          {selectedActivity.replace('_', ' ')} • LIVE GPS
+                        </span>
+                      </div>
 
-              <WorkoutControls
-                isTracking={isWalkTracking}
-                isPaused={isWalkPaused}
-                activeSession={activeWalkSession}
-                athleteName={currentUser.displayName || currentUser.username}
-                activityType={selectedActivity}
-                onStart={handleStartWalk}
-                onPause={handlePauseWalk}
-                onResume={handleResumeWalk}
-                onStop={handleStopWalk}
-              />
+                      <div className="flex items-center gap-1 p-1 rounded-xl bg-white/80 border border-black/[0.06]">
+                        <button
+                          onClick={() => {
+                            sound.playClick();
+                            setInWorkoutViewMode('hud');
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition-all ${
+                            inWorkoutViewMode === 'hud'
+                              ? 'bg-black text-[#E8F84A]'
+                              : 'text-slate-600 hover:text-black'
+                          }`}
+                        >
+                          HUD
+                        </button>
+                        <button
+                          onClick={() => {
+                            sound.playClick();
+                            setInWorkoutViewMode('map');
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition-all ${
+                            inWorkoutViewMode === 'map'
+                              ? 'bg-black text-[#E8F84A]'
+                              : 'text-slate-600 hover:text-black'
+                          }`}
+                        >
+                          Map
+                        </button>
+                        <button
+                          onClick={() => {
+                            sound.playClick();
+                            setInWorkoutViewMode('split');
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition-all ${
+                            inWorkoutViewMode === 'split'
+                              ? 'bg-black text-[#E8F84A]'
+                              : 'text-slate-600 hover:text-black'
+                          }`}
+                        >
+                          Split
+                        </button>
+                      </div>
+                    </div>
 
-              <WorkoutHistory history={walkHistory} />
+                    {/* HUD Telemetry View */}
+                    {(inWorkoutViewMode === 'hud' || inWorkoutViewMode === 'split') && (
+                      <BriskwalkHUD
+                        session={activeWalkSession}
+                        userSettings={settings}
+                        activityType={selectedActivity}
+                      />
+                    )}
+
+                    {/* Radar Map View */}
+                    {(inWorkoutViewMode === 'map' || inWorkoutViewMode === 'split') && (
+                      <LiveTrackerMap
+                        currentLocation={currentLocation}
+                        path={activeWalkSession?.path || []}
+                        isTracking={isWalkTracking && !isWalkPaused}
+                        onCenterMap={() => {}}
+                      />
+                    )}
+
+                    {/* Workout Action Controls */}
+                    <WorkoutControls
+                      isTracking={isWalkTracking}
+                      isPaused={isWalkPaused}
+                      activeSession={activeWalkSession}
+                      athleteName={currentUser.displayName || currentUser.username}
+                      activityType={selectedActivity}
+                      onStart={() => handleStartWalk()}
+                      onPause={handlePauseWalk}
+                      onResume={handleResumeWalk}
+                      onStop={handleStopWalk}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
 

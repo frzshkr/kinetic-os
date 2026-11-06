@@ -112,9 +112,18 @@ export interface SplitRecord {
 
 export type ActivityType = 'running' | 'fast_walk' | 'brisk_walk' | 'jogging' | 'casual_walk';
 
+export type WorkoutGoalType = 'open' | 'distance' | 'time';
+
+export interface WorkoutGoal {
+  type: WorkoutGoalType;
+  targetDistanceKm?: number;
+  targetDurationMinutes?: number;
+}
+
 export interface BriskwalkSession {
   id: string;
   activityType?: ActivityType;
+  targetGoal?: WorkoutGoal;
   startTime: number;
   endTime?: number;
   durationSeconds: number;

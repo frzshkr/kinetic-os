@@ -367,7 +367,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="e.g. farris_stride"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-600 text-sm font-medium focus:outline-none focus:border-[#E8F84A] transition-colors"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-600 text-base sm:text-sm font-medium focus:outline-none focus:border-[#E8F84A] transition-colors"
                     />
                   </div>
                 </div>
@@ -387,7 +387,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Min 4 characters"
-                      className="w-full pl-10 pr-10 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-600 text-sm font-medium focus:outline-none focus:border-[#E8F84A] transition-colors"
+                      className="w-full pl-10 pr-10 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-600 text-base sm:text-sm font-medium focus:outline-none focus:border-[#E8F84A] transition-colors"
                     />
                     <button
                       type="button"
@@ -414,7 +414,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-type password"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-600 text-sm font-medium focus:outline-none focus:border-[#E8F84A] transition-colors"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-600 text-base sm:text-sm font-medium focus:outline-none focus:border-[#E8F84A] transition-colors"
                     />
                   </div>
                 </div>
@@ -509,7 +509,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="Your registered username"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-600 text-sm font-medium focus:outline-none focus:border-[#E8F84A] transition-colors"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-600 text-base sm:text-sm font-medium focus:outline-none focus:border-[#E8F84A] transition-colors"
                     />
                   </div>
                 </div>
@@ -529,7 +529,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-10 pr-10 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-600 text-sm font-medium focus:outline-none focus:border-[#E8F84A] transition-colors"
+                      className="w-full pl-10 pr-10 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-600 text-base sm:text-sm font-medium focus:outline-none focus:border-[#E8F84A] transition-colors"
                     />
                     <button
                       type="button"

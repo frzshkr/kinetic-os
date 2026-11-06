@@ -114,7 +114,7 @@ export const FoodScannerModal: React.FC<FoodScannerModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md overflow-y-auto">
         
         {/* Modal Window */}
         <motion.div
@@ -122,7 +122,7 @@ export const FoodScannerModal: React.FC<FoodScannerModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-          className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-black/[0.08] overflow-hidden"
+          className="relative w-full max-w-lg bg-white rounded-3xl p-5 sm:p-7 shadow-2xl border border-black/[0.08] my-auto max-h-[92vh] overflow-y-auto"
         >
           {/* Top Bar */}
           <div className="flex items-center justify-between pb-4 mb-4 border-b border-black/[0.06]">

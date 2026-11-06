@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BriskwalkSession } from '../../types';
+import { BriskwalkSession, ActivityType } from '../../types';
 import { sound } from '../../utils/audio';
 import { Play, Pause, Square } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -11,6 +11,7 @@ interface WorkoutControlsProps {
   isPaused: boolean;
   activeSession: BriskwalkSession | null;
   athleteName?: string;
+  activityType?: ActivityType;
   onStart: () => void;
   onPause: () => void;
   onResume: () => void;
@@ -22,6 +23,7 @@ export const WorkoutControls: React.FC<WorkoutControlsProps> = ({
   isPaused,
   activeSession,
   athleteName = 'Athlete',
+  activityType = 'brisk_walk',
   onStart,
   onPause,
   onResume,
@@ -73,7 +75,17 @@ export const WorkoutControls: React.FC<WorkoutControlsProps> = ({
             className="flex-1 py-4 px-6 rounded-2xl bg-black text-[#E8F84A] font-black text-base shadow-lg shadow-black/15 transition-all flex items-center justify-center gap-2 font-['Outfit'] uppercase tracking-wider"
           >
             <Play className="w-5 h-5 fill-current" />
-            <span>START BRISK WALK GPS</span>
+            <span>
+              {activityType === 'running'
+                ? 'START RUNNING GPS'
+                : activityType === 'fast_walk'
+                ? 'START FAST WALK GPS'
+                : activityType === 'jogging'
+                ? 'START JOGGING GPS'
+                : activityType === 'casual_walk'
+                ? 'START CASUAL WALK GPS'
+                : 'START BRISK WALK GPS'}
+            </span>
           </motion.button>
         ) : (
           <>

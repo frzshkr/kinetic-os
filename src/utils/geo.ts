@@ -1,4 +1,4 @@
-import { GeoPoint } from '../types';
+import { GeoPoint, ActivityType } from '../types';
 
 /**
  * Calculates distance between two coordinates in meters using the Haversine formula
@@ -95,34 +95,52 @@ export function formatNavDistance(meters: number): string {
 }
 
 /**
- * Calculate estimated calories burned for brisk walking
- * MET for brisk walk (4.5 to 5.0 METs)
+ * Calculate estimated calories burned for walking/running activities
  * Calories = MET * Weight(kg) * Duration(hours)
  */
 export function calculateWalkCalories(
   weightKg: number,
   durationSeconds: number,
-  distanceMeters: number
+  distanceMeters: number,
+  activityType: ActivityType = 'brisk_walk'
 ): number {
   if (durationSeconds <= 0 || distanceMeters <= 0) return 0;
   const speedKmh = (distanceMeters / 1000) / (durationSeconds / 3600);
   
-  // Dynamic MET scaling based on actual briskwalk speed
-  let met = 3.5; // slow walk
-  if (speedKmh >= 4.0 && speedKmh < 5.0) met = 4.3; // standard brisk walk
-  else if (speedKmh >= 5.0 && speedKmh < 6.0) met = 4.8; // power walk
-  else if (speedKmh >= 6.0 && speedKmh < 7.5) met = 5.5; // very fast brisk walk
-  else if (speedKmh >= 7.5) met = 7.0; // jog
+  let met = 4.3;
+  if (activityType === 'running') {
+    met = Math.max(8.5, speedKmh * 1.05); // Running burns high calories
+  } else if (activityType === 'jogging') {
+    met = Math.max(6.5, speedKmh * 0.95);
+  } else if (activityType === 'fast_walk') {
+    met = 5.2;
+  } else if (activityType === 'casual_walk') {
+    met = 3.0;
+  } else {
+    // Brisk walk default
+    if (speedKmh >= 4.0 && speedKmh < 5.0) met = 4.3;
+    else if (speedKmh >= 5.0 && speedKmh < 6.0) met = 4.8;
+    else if (speedKmh >= 6.0 && speedKmh < 7.5) met = 5.5;
+    else if (speedKmh >= 7.5) met = 7.0;
+  }
 
   const hours = durationSeconds / 3600;
   return Math.round(met * weightKg * hours);
 }
 
 /**
- * Estimate steps taken from distance (avg step length ~0.75m for brisk walking)
+ * Estimate steps taken from distance based on activity biomechanics
  */
-export function estimateSteps(distanceMeters: number): number {
-  const avgStepLengthMeters = 0.76;
+export function estimateSteps(
+  distanceMeters: number,
+  activityType: ActivityType = 'brisk_walk'
+): number {
+  let avgStepLengthMeters = 0.76;
+  if (activityType === 'running') avgStepLengthMeters = 1.05;
+  else if (activityType === 'jogging') avgStepLengthMeters = 0.88;
+  else if (activityType === 'fast_walk') avgStepLengthMeters = 0.80;
+  else if (activityType === 'casual_walk') avgStepLengthMeters = 0.70;
+
   return Math.round(distanceMeters / avgStepLengthMeters);
 }
 

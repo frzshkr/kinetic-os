@@ -110,8 +110,11 @@ export interface SplitRecord {
   paceSecondsPerKm: number;
 }
 
+export type ActivityType = 'running' | 'fast_walk' | 'brisk_walk' | 'jogging' | 'casual_walk';
+
 export interface BriskwalkSession {
   id: string;
+  activityType?: ActivityType;
   startTime: number;
   endTime?: number;
   durationSeconds: number;

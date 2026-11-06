@@ -45,15 +45,25 @@ export const StravaShareCardModal: React.FC<StravaShareCardModalProps> = ({
     ? Math.round((steps / (session.durationSeconds / 60)))
     : 118;
 
+  const activityLabel = session.activityType === 'running'
+    ? 'RUNNING'
+    : session.activityType === 'fast_walk'
+    ? 'FAST WALK'
+    : session.activityType === 'jogging'
+    ? 'JOGGING'
+    : session.activityType === 'casual_walk'
+    ? 'CASUAL WALK'
+    : 'BRISK WALK';
+
   const handleShare = async () => {
     sound.playClick();
-    const shareText = `🏃‍♂️ KINETIC ATHLETE WALK COMPLETE // ${athleteName.toUpperCase()}
+    const shareText = `🏃‍♂️ ATHLETE ${activityLabel} COMPLETE // ${athleteName.toUpperCase()}
 📍 Distance: ${distanceKm} KM
 ⏱ Time: ${durationStr}
 ⚡ Avg Pace: ${avgPaceStr} /km
 🔥 Burn: ${calories} kcal (${steps.toLocaleString()} steps)
-⚡ Cadence: ${cadenceSpm} SPM (Zone 2 Fat Burn)
-🔒 Logged in Kinetic Private Vault`;
+⚡ Cadence: ${cadenceSpm} SPM
+🔒 Logged in Private Athlete Vault`;
 
     if (navigator.share) {
       try {

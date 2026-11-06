@@ -8,6 +8,7 @@ import {
   GeoPoint,
   DailyHealthLog,
   AuthUser,
+  ActivityType,
 } from './types';
 import { storage, DEFAULT_SETTINGS, DEFAULT_FASTING_STATE } from './utils/storage';
 import { dbService } from './services/dbService';
@@ -34,6 +35,7 @@ import { BriskwalkHUD } from './components/briskwalk/BriskwalkHUD';
 import { LiveTrackerMap } from './components/briskwalk/LiveTrackerMap';
 import { WorkoutControls } from './components/briskwalk/WorkoutControls';
 import { WorkoutHistory } from './components/briskwalk/WorkoutHistory';
+import { ActivityTypeSelector } from './components/briskwalk/ActivityTypeSelector';
 
 import { ReadinessView } from './components/health/ReadinessView';
 import { SummaryView } from './components/analytics/SummaryView';
@@ -75,6 +77,7 @@ export const App: React.FC = () => {
 
   // Briskwalk State
   const [currentLocation, setCurrentLocation] = useState<GeoPoint | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<ActivityType>('brisk_walk');
   const [isWalkTracking, setIsWalkTracking] = useState<boolean>(false);
   const [isWalkPaused, setIsWalkPaused] = useState<boolean>(false);
   const [activeWalkSession, setActiveWalkSession] = useState<BriskwalkSession | null>(null);
@@ -295,8 +298,8 @@ export const App: React.FC = () => {
       const totalDistance = prev.distanceMeters + addedDistance;
       const totalDuration = prev.durationSeconds + 1;
       const avgPace = totalDistance > 20 ? (totalDuration / totalDistance) * 1000 : 0;
-      const calories = calculateWalkCalories(settings.weightKg, totalDuration, totalDistance);
-      const steps = estimateSteps(totalDistance);
+      const calories = calculateWalkCalories(settings.weightKg, totalDuration, totalDistance, prev.activityType || selectedActivity);
+      const steps = estimateSteps(totalDistance, prev.activityType || selectedActivity);
 
       const splits = [...prev.splits];
       const currentKmMark = Math.floor(totalDistance / 1000);
@@ -336,7 +339,8 @@ export const App: React.FC = () => {
           const calories = calculateWalkCalories(
             settings.weightKg,
             totalDuration,
-            prev.distanceMeters
+            prev.distanceMeters,
+            prev.activityType || selectedActivity
           );
           return {
             ...prev,
@@ -438,6 +442,7 @@ export const App: React.FC = () => {
   const handleStartWalk = () => {
     const newSession: BriskwalkSession = {
       id: `walk_${Date.now()}`,
+      activityType: selectedActivity,
       startTime: Date.now(),
       durationSeconds: 0,
       distanceMeters: 0,
@@ -605,9 +610,17 @@ export const App: React.FC = () => {
               transition={{ type: 'spring', stiffness: 350, damping: 28 }}
               className="space-y-4"
             >
+              {/* Activity Mode Selector: Running, Brisk Walk, Fast Walk, Jogging, Casual Walk */}
+              <ActivityTypeSelector
+                selectedActivity={selectedActivity}
+                onSelectActivity={(act) => setSelectedActivity(act)}
+                disabled={isWalkTracking}
+              />
+
               <BriskwalkHUD
                 session={activeWalkSession}
                 userSettings={settings}
+                activityType={selectedActivity}
               />
 
               <LiveTrackerMap
@@ -622,6 +635,7 @@ export const App: React.FC = () => {
                 isPaused={isWalkPaused}
                 activeSession={activeWalkSession}
                 athleteName={currentUser.displayName || currentUser.username}
+                activityType={selectedActivity}
                 onStart={handleStartWalk}
                 onPause={handlePauseWalk}
                 onResume={handleResumeWalk}

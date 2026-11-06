@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BriskwalkSession, UserSettings } from '../../types';
+import { BriskwalkSession, UserSettings, ActivityType } from '../../types';
 import { formatPace, formatDuration, formatDistanceKm } from '../../utils/geo';
 import {
   Flame,
@@ -17,9 +17,11 @@ import {
 interface BriskwalkHUDProps {
   session: BriskwalkSession | null;
   userSettings: UserSettings;
+  activityType?: ActivityType;
 }
 
-export const BriskwalkHUD: React.FC<BriskwalkHUDProps> = ({ session, userSettings }) => {
+export const BriskwalkHUD: React.FC<BriskwalkHUDProps> = ({ session, userSettings, activityType = 'brisk_walk' }) => {
+  const currentActivity = session?.activityType || activityType;
   const [showSplits, setShowSplits] = useState(false);
 
   const distanceKm = session ? formatDistanceKm(session.distanceMeters) : '0.00';
@@ -35,13 +37,29 @@ export const BriskwalkHUD: React.FC<BriskwalkHUDProps> = ({ session, userSetting
     ? Math.round(steps / (session.durationSeconds / 60))
     : 0;
 
-  const targetPaceSecs = userSettings.targetPaceMinPerKm * 60;
+  // Calibrate target pace based on selected workout mode
+  let targetPaceSecs = userSettings.targetPaceMinPerKm * 60;
+  let zoneLabel = 'ZONE 2 AEROBIC BASE';
+  if (currentActivity === 'running') {
+    targetPaceSecs = 330; // 5:30 /km
+    zoneLabel = 'CARDIO VO2 MAX PEAK';
+  } else if (currentActivity === 'jogging') {
+    targetPaceSecs = 390; // 6:30 /km
+    zoneLabel = 'STEADY AEROBIC STRIDE';
+  } else if (currentActivity === 'fast_walk') {
+    targetPaceSecs = 420; // 7:00 /km
+    zoneLabel = 'POWER METABOLIC BURN';
+  } else if (currentActivity === 'casual_walk') {
+    targetPaceSecs = 600; // 10:00 /km
+    zoneLabel = 'RECOVERY PARASYMPATHETIC';
+  }
+
   let paceStatusColor = 'bg-[#E8F84A] text-slate-950 border-black/10';
-  let paceStatusText = 'OPTIMAL ZONE 2';
+  let paceStatusText = 'ON TARGET';
   if (session && session.currentPaceSecondsPerKm > 0) {
     if (session.currentPaceSecondsPerKm < targetPaceSecs - 45) {
       paceStatusColor = 'bg-sky-400 text-slate-950 border-sky-500/20';
-      paceStatusText = 'POWER CADENCE';
+      paceStatusText = 'HIGH VELOCITY';
     } else if (session.currentPaceSecondsPerKm > targetPaceSecs + 60) {
       paceStatusColor = 'bg-amber-300 text-slate-950 border-amber-400/20';
       paceStatusText = 'INCREASE CADENCE';
@@ -200,7 +218,7 @@ export const BriskwalkHUD: React.FC<BriskwalkHUDProps> = ({ session, userSetting
         <div className="flex items-center justify-between py-2 px-4 rounded-2xl bg-black text-white text-xs font-mono font-black uppercase shadow-xs">
           <div className="flex items-center gap-2">
             <Heart className="w-3.5 h-3.5 text-rose-500 animate-pulse fill-rose-500" />
-            <span className="text-[#E8F84A]">ZONE 2 AEROBIC BASE</span>
+            <span className="text-[#E8F84A]">{zoneLabel}</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-[10px] text-zinc-400 font-normal">GPS 3D FIX</span>

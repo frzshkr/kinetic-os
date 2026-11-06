@@ -26,8 +26,8 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     },
     {
       id: 'briskwalk' as ActiveTab,
-      label: 'Walk',
-      badge: isWalkActive ? 'LIVE' : 'GPS',
+      label: 'Move',
+      badge: isWalkActive ? 'LIVE' : 'RUN/WALK',
       icon: Footprints,
     },
     {

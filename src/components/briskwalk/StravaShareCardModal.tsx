@@ -30,7 +30,7 @@ export const StravaShareCardModal: React.FC<StravaShareCardModalProps> = ({
   isOpen,
   onClose,
   session,
-  athleteName = 'Athlete',
+  athleteName = 'User',
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -57,13 +57,13 @@ export const StravaShareCardModal: React.FC<StravaShareCardModalProps> = ({
 
   const handleShare = async () => {
     sound.playClick();
-    const shareText = `🏃‍♂️ ATHLETE ${activityLabel} COMPLETE // ${athleteName.toUpperCase()}
-📍 Distance: ${distanceKm} KM
-⏱ Time: ${durationStr}
-⚡ Avg Pace: ${avgPaceStr} /km
-🔥 Burn: ${calories} kcal (${steps.toLocaleString()} steps)
+    const shareText = `🏃‍♂️ ${activityLabel} SELESAI // ${athleteName.toUpperCase()}
+📍 Jarak: ${distanceKm} KM
+⏱ Masa: ${durationStr}
+⚡ Purata Pace: ${avgPaceStr} /km
+🔥 Kalori: ${calories} kcal (${steps.toLocaleString()} langkah)
 ⚡ Cadence: ${cadenceSpm} SPM
-🔒 Logged in Private Athlete Vault`;
+🔒 Disimpan dalam STRIDE`;
 
     if (navigator.share) {
       try {

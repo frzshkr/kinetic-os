@@ -236,7 +236,7 @@ app.post('/api/ai/chat', optionalToken, async (req, res) => {
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
       const systemInstruction = `You are STRIDE Coach, an elite personal sports science and metabolic performance advisor.
-User: ${req.user.username || 'Athlete'}.
+User: ${req.user.username || 'User'}.
 Primary domains: Intermittent Fasting (autophagy & ketosis bioenergetics), Brisk Walk (Zone 2 aerobic pacing, cadence), Sleep & Circadian rhythm, and daily macro/protein tracking.
 Rule: Be concise, direct, scientifically accurate, and completely free of robotic filler.`;
 
@@ -295,7 +295,7 @@ app.post('/api/ai/food-vision', optionalToken, async (req, res) => {
       const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-      const promptText = `You are an elite sports nutritionist and computer-vision meal analyzer for athlete ${req.user.username || 'Farris'}.
+      const promptText = `You are an elite sports nutritionist and computer-vision meal analyzer for user ${req.user.username || 'Farris'}.
 Analyze this food photograph. Estimate its nutritional contents with high precision.
 Return strictly a valid JSON object without markdown fences, matching this structure:
 {

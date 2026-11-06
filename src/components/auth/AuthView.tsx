@@ -59,7 +59,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
 
     const cleanUser = username.trim();
     if (!cleanUser) {
-      setErrorMessage('Please enter an athlete username.');
+      setErrorMessage('Please enter a username.');
       return;
     }
     if (cleanUser.length < 3) {
@@ -167,7 +167,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 STRIDE
               </span>
               <span className="px-2 py-0.5 rounded-full bg-white/10 text-[#E8F84A] text-[9px] font-mono font-bold tracking-wider border border-[#E8F84A]/20">
-                ATHLETE OS
+                FITNESS OS
               </span>
             </div>
             <p className="text-[10px] text-zinc-400 font-mono tracking-tight">
@@ -242,7 +242,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                   className="w-full py-4 px-6 rounded-2xl bg-[#E8F84A] text-black font-black text-base uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(232,248,74,0.25)] hover:bg-[#d9e843] transition-colors"
                 >
                   <Sparkles className="w-5 h-5 fill-black" />
-                  <span>Create Athlete Account</span>
+                  <span>Create Account</span>
                   <ArrowRight className="w-5 h-5 ml-1" />
                 </motion.button>
 
@@ -304,7 +304,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                     Strava-Grade Brisk Walk
                   </h3>
                   <p className="text-[11px] text-zinc-400 leading-relaxed">
-                    Real-time Zone 2 cadence, split pacing, and shareable athlete cards.
+                    Real-time Zone 2 cadence, split pacing, and shareable workout cards.
                   </p>
                 </div>
 
@@ -342,7 +342,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                   <span>STEP 1 OF 2 • ACCOUNT SETUP</span>
                 </div>
                 <h2 className="text-2xl font-black tracking-tight text-white uppercase">
-                  CREATE ATHLETE VAULT
+                  CREATE YOUR VAULT
                 </h2>
                 <p className="text-xs text-zinc-400 leading-relaxed">
                   Your private biometric consultation starts immediately upon account creation.
@@ -354,7 +354,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 {/* Username */}
                 <div className="space-y-1.5 text-left">
                   <label className="text-[11px] font-mono font-bold text-zinc-300 uppercase tracking-wider block">
-                    Athlete Username
+                    Username
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">

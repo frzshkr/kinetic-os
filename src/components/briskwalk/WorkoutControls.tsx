@@ -22,7 +22,7 @@ export const WorkoutControls: React.FC<WorkoutControlsProps> = ({
   isTracking,
   isPaused,
   activeSession,
-  athleteName = 'Athlete',
+  athleteName = 'User',
   activityType = 'brisk_walk',
   onStart,
   onPause,

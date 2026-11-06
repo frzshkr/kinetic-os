@@ -51,7 +51,7 @@ export const BiometricConsultationModal: React.FC<BiometricConsultationModalProp
     bmiCategory = 'Underweight';
     bmiColor = 'text-amber-600 bg-amber-50 border-amber-200';
   } else if (bmi >= 23 && bmi < 27.5) {
-    bmiCategory = 'Upper Athletic Normal';
+    bmiCategory = 'Normal Sihat (Upper Normal)';
     bmiColor = 'text-sky-600 bg-sky-50 border-sky-200';
   } else if (bmi >= 27.5) {
     bmiCategory = 'Elevated Body Mass';
@@ -249,7 +249,7 @@ export const BiometricConsultationModal: React.FC<BiometricConsultationModalProp
                 <div className="grid grid-cols-2 gap-2.5">
                   {[
                     { id: 'fat_loss', title: 'Cut Fat & Weight Loss', desc: 'Burn visceral fat & reveal muscle' },
-                    { id: 'lean_muscle', title: 'Lean Muscle & Recomp', desc: 'Protect & build lean athletic mass' },
+                    { id: 'lean_muscle', title: 'Lean Muscle & Recomp', desc: 'Bina & kekalkan otot tanpa lemak' },
                     { id: 'endurance', title: 'Zone 2 Cardio & Stamina', desc: 'Heart health & mitochondrial base' },
                     { id: 'maintenance', title: 'Longevity & Maintenance', desc: 'Cellular autophagy & balance' },
                   ].map((g) => {

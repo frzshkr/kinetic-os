@@ -170,7 +170,7 @@ export const App: React.FC = () => {
     const guestUser: AuthUser = {
       id: 'guest_user',
       username: 'guest',
-      displayName: 'Guest Athlete',
+      displayName: 'Guest User',
     };
     setCurrentUser(guestUser);
     sound.playClick();

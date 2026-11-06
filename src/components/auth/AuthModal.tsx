@@ -91,7 +91,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   const handleQuickDemo = async () => {
-    const demoUser = `athlete_${Math.floor(Math.random() * 900 + 100)}`;
+    const demoUser = `user_${Math.floor(Math.random() * 900 + 100)}`;
     const demoPass = 'kinetic2025';
     setUsername(demoUser);
     setPassword(demoPass);

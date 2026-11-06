@@ -13,6 +13,7 @@ import {
   Check,
   Server,
   Sparkles,
+  Trash2,
 } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -73,6 +74,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       }
     };
     reader.readAsText(file);
+  };
+
+  const handlePurgeAllData = () => {
+    sound.playClick();
+    if (window.confirm('Adakah anda pasti mahu mengosongkan semua data dan mula semula dari kosong (0)?')) {
+      localStorage.clear();
+      sound.playNotification();
+      window.location.reload();
+    }
   };
 
   return (
@@ -273,6 +283,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {importStatus}
               </p>
             )}
+
+            {/* Danger Zone: Purge / Reset to Zero */}
+            <div className="pt-3 mt-3 border-t border-black/[0.06]">
+              <button
+                type="button"
+                onClick={handlePurgeAllData}
+                className="w-full py-2.5 px-3 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold font-mono flex items-center justify-center gap-2 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                <span>PURGE SEMUA DATA & MULA DARI KOSONG (0)</span>
+              </button>
+            </div>
           </div>
         </div>
 
